@@ -94,16 +94,15 @@ function ProductDetails({ product }) {
     selectCartQuantityById(state, product.id),
   );
 
-  const catalogueItems = Array.isArray(items) ? items : [];
-
   const relatedProducts = useMemo(() => {
+    const catalogueItems = Array.isArray(items) ? items : [];
     const sameCategory = catalogueItems.filter(
       (item) => item.category === product.category && item.id !== product.id,
     );
     const fallback = catalogueItems.filter((item) => item.id !== product.id);
 
     return (sameCategory.length > 0 ? sameCategory : fallback).slice(0, 4);
-  }, [catalogueItems, product.category, product.id]);
+  }, [items, product.category, product.id]);
 
   const stock = Number(product.stock);
   const hasStock = Number.isFinite(stock) && stock > 0;

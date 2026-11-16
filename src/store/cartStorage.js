@@ -1,35 +1,6 @@
+import { normalizePersistedCartItem } from '../domain/cart';
+
 export const CART_STORAGE_KEY = 'shirtstore.cart.v1';
-
-/**
- * Persisted values come from the browser, which means they can be edited or
- * corrupted. Every item is validated and clamped before it reaches Redux.
- */
-function normalizeItem(item) {
-  if (!item || typeof item !== 'object') return null;
-
-  const id = Number(item.id);
-  const title = typeof item.title === 'string' ? item.title.trim() : '';
-  const price = Number(item.price);
-  const stock = Number(item.stock);
-  const quantity = Math.trunc(Number(item.quantity));
-
-  if (!Number.isInteger(id) || id <= 0) return null;
-  if (!title) return null;
-  if (!Number.isFinite(price) || price < 0) return null;
-  if (!Number.isFinite(stock) || stock <= 0) return null;
-  if (!Number.isInteger(quantity) || quantity < 1) return null;
-
-  return {
-    id,
-    title,
-    price,
-    thumbnail: typeof item.thumbnail === 'string' ? item.thumbnail : '',
-    brand: typeof item.brand === 'string' ? item.brand : null,
-    category: typeof item.category === 'string' ? item.category : '',
-    stock,
-    quantity: Math.min(quantity, stock),
-  };
-}
 
 function getStorage() {
   try {
@@ -40,6 +11,11 @@ function getStorage() {
   }
 }
 
+/**
+ * Local-storage cart repository. This is the current fallback persistence
+ * strategy; a future backend can replace these functions with API-backed
+ * cart/session calls while keeping the rest of the UI stable.
+ */
 export function loadCart() {
   const storage = getStorage();
   if (!storage) return [];
@@ -54,7 +30,7 @@ export function loadCart() {
     const byId = new Map();
 
     for (const item of parsed) {
-      const normalized = normalizeItem(item);
+      const normalized = normalizePersistedCartItem(item);
       if (normalized) byId.set(normalized.id, normalized);
     }
 
@@ -72,5 +48,16 @@ export function saveCart(items) {
     storage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
   } catch {
     // A full or blocked storage should never break the cart UI.
+  }
+}
+
+export function clearPersistedCart() {
+  const storage = getStorage();
+  if (!storage) return;
+
+  try {
+    storage.removeItem(CART_STORAGE_KEY);
+  } catch {
+    // Ignore storage access failures.
   }
 }

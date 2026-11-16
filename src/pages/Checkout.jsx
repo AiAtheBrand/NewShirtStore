@@ -1,47 +1,14 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
+import {
+  EMPTY_CUSTOMER,
+  createOrderDraft,
+  validateCustomer,
+} from '../domain/checkout';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { selectCartItems, selectCartSubtotal } from '../store/cartSlice';
 import { formatCurrency } from '../utils/formatCurrency';
-
-const EMPTY_FORM = {
-  fullName: '',
-  email: '',
-  address: '',
-  city: '',
-  phone: '',
-};
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function validate(values) {
-  const errors = {};
-
-  if (!values.fullName.trim()) {
-    errors.fullName = 'Enter your full name.';
-  }
-
-  if (!values.email.trim()) {
-    errors.email = 'Enter your email address.';
-  } else if (!EMAIL_PATTERN.test(values.email.trim())) {
-    errors.email = 'Enter a valid email address.';
-  }
-
-  if (!values.address.trim()) {
-    errors.address = 'Enter your street address.';
-  }
-
-  if (!values.city.trim()) {
-    errors.city = 'Enter your city.';
-  }
-
-  if (!values.phone.trim()) {
-    errors.phone = 'Enter your phone number.';
-  }
-
-  return errors;
-}
 
 function FormField({
   id,
@@ -90,9 +57,9 @@ function Checkout() {
   const cartItems = useSelector(selectCartItems);
   const subtotal = useSelector(selectCartSubtotal);
 
-  const [formData, setFormData] = useState(EMPTY_FORM);
+  const [formData, setFormData] = useState(EMPTY_CUSTOMER);
   const [errors, setErrors] = useState({});
-  const [demoSubmitted, setDemoSubmitted] = useState(false);
+  const [orderDraft, setOrderDraft] = useState(null);
 
   const cartIsEmpty = cartItems.length === 0;
 
@@ -101,6 +68,7 @@ function Checkout() {
 
     setFormData((current) => ({ ...current, [name]: value }));
     setErrors((current) => ({ ...current, [name]: undefined }));
+    setOrderDraft(null);
   };
 
   const handleSubmit = (event) => {
@@ -108,50 +76,83 @@ function Checkout() {
 
     if (cartIsEmpty) return;
 
-    const nextErrors = validate(formData);
+    const nextErrors = validateCustomer(formData);
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) {
-      setDemoSubmitted(false);
+      setOrderDraft(null);
       return;
     }
 
-    // There is no backend yet, so this deliberately does not clear the cart,
-    // log customer details, or pretend an order was created.
-    setDemoSubmitted(true);
+    // No backend/order API yet: build a validated draft for review, but do not
+    // submit it, persist it, clear the cart, or pretend an order was created.
+    setOrderDraft(
+      createOrderDraft({
+        customer: formData,
+        items: cartItems,
+        currency: 'USD',
+      }),
+    );
   };
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
       <header>
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">
-          Demo checkout
+          Demo checkout review
         </p>
 
         <h1 className="mt-2 text-4xl font-black tracking-tight">CHECKOUT</h1>
 
         <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-500">
-          This form validates your details, but no order is placed and no
-          payment is taken. Nothing you type is sent or stored.
+          Review your details and cart. This demo validates the form and prepares
+          an order draft, but no order is placed and no payment is taken. Nothing
+          you type is sent or stored.
         </p>
       </header>
 
-      {demoSubmitted && (
+      {orderDraft && (
         <div
           role="status"
           className="mt-8 rounded-2xl border border-amber-300 bg-amber-50 p-6"
         >
-          <h2 className="text-lg font-bold">Demo checkout only</h2>
+          <h2 className="text-lg font-bold">Order draft ready for review</h2>
 
           <p className="mt-2 text-sm leading-6 text-amber-900">
-            Thanks, {formData.fullName.trim()}. This demo has no backend or
-            payment provider, so no order was created, nothing was charged, and
-            your cart is unchanged.
+            Thanks, {orderDraft.customer.fullName}. Your information and{' '}
+            {orderDraft.items.length}{' '}
+            {orderDraft.items.length === 1 ? 'item' : 'items'} are valid for a
+            draft order, but this demo has no backend or payment provider. No
+            order was created, nothing was charged, and your cart is unchanged.
           </p>
+
+          <dl className="mt-4 grid gap-3 text-sm text-amber-950 sm:grid-cols-2">
+            <div>
+              <dt className="font-semibold">Contact</dt>
+              <dd>{orderDraft.customer.email}</dd>
+              <dd>{orderDraft.customer.phone}</dd>
+            </div>
+            <div>
+              <dt className="font-semibold">Delivery (draft)</dt>
+              <dd>{orderDraft.customer.address}</dd>
+              <dd>{orderDraft.customer.city}</dd>
+            </div>
+            <div>
+              <dt className="font-semibold">Draft status</dt>
+              <dd>Not submitted</dd>
+            </div>
+            <div>
+              <dt className="font-semibold">Subtotal</dt>
+              <dd>
+                {formatCurrency(orderDraft.totals.subtotal)}{' '}
+                {orderDraft.totals.currency}
+              </dd>
+            </div>
+          </dl>
 
           <button
             type="button"
-            onClick={() => setDemoSubmitted(false)}
+            onClick={() => setOrderDraft(null)}
             className="mt-4 rounded-full bg-black px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800"
           >
             Edit details
@@ -221,9 +222,17 @@ function Checkout() {
         </form>
 
         <section aria-labelledby="order-summary-title">
-          <h2 id="order-summary-title" className="text-xl font-bold">
-            Order summary
-          </h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 id="order-summary-title" className="text-xl font-bold">
+              Order summary
+            </h2>
+            <Link
+              to="/cart"
+              className="text-sm font-semibold underline underline-offset-4 transition hover:text-gray-600"
+            >
+              Edit cart
+            </Link>
+          </div>
 
           {cartIsEmpty ? (
             <div className="mt-6 rounded-2xl border border-dashed border-gray-300 p-8 text-center">
@@ -286,7 +295,7 @@ function Checkout() {
               disabled={cartIsEmpty}
               className="mt-6 w-full rounded-full bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600"
             >
-              Place demo order
+              Review demo order
             </button>
           </div>
         </section>

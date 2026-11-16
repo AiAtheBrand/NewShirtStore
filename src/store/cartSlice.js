@@ -1,38 +1,14 @@
 import { createSlice } from '@reduxjs/toolkit';
+import {
+  calculateCartCount,
+  calculateCartSubtotal,
+  getStockLimit,
+  toCartLineItem,
+} from '../domain/cart';
 
 const initialState = {
   items: [],
 };
-
-function getStockLimit(stock) {
-  const parsedStock = Number(stock);
-
-  if (Number.isFinite(parsedStock)) {
-    return Math.max(0, parsedStock);
-  }
-
-  // A missing stock field is treated as unlimited; an explicit 0 means the
-  // product cannot be added to the cart.
-  return Number.POSITIVE_INFINITY;
-}
-
-/**
- * Only the fields the cart needs are copied into the cart. This keeps cart
- * items small, avoids accidentally persisting the full API payload, and keeps
- * totals independent from future API response changes.
- */
-function toCartItem(product, quantity = 1) {
-  return {
-    id: product.id,
-    title: product.title,
-    price: product.price,
-    thumbnail: product.thumbnail,
-    brand: product.brand ?? null,
-    category: product.category,
-    stock: product.stock,
-    quantity,
-  };
-}
 
 function addItem(state, product, amount = 1) {
   if (!product) return;
@@ -54,7 +30,7 @@ function addItem(state, product, amount = 1) {
     return;
   }
 
-  state.items.push(toCartItem(product, Math.min(requested, stockLimit)));
+  state.items.push(toCartLineItem(product, Math.min(requested, stockLimit)));
 }
 
 const cartSlice = createSlice({
@@ -112,19 +88,10 @@ export const {
 
 export const selectCartItems = (state) => state.cart.items;
 
-export const selectCartCount = (state) =>
-  state.cart.items.reduce((total, item) => total + item.quantity, 0);
+export const selectCartCount = (state) => calculateCartCount(state.cart.items);
 
-export const selectCartSubtotal = (state) => {
-  const total = state.cart.items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0,
-  );
-
-  // Prices are decimal values from the API; round once at the end so
-  // floating-point noise never reaches the UI.
-  return Math.round(total * 100) / 100;
-};
+export const selectCartSubtotal = (state) =>
+  calculateCartSubtotal(state.cart.items);
 
 export const selectCartQuantityById = (state, productId) =>
   state.cart.items.find((item) => item.id === productId)?.quantity ?? 0;

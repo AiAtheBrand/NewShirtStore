@@ -84,15 +84,32 @@ done client-side. A larger catalogue would move those operations to the server.
 
 ```
 src/
-  api/          API request, category whitelist and normalisation
+  api/          Compatibility exports for product data access
+  domain/       Shared models/mappers (product, cart, checkout/order draft)
+  services/     Data-source clients/services (API client, product service)
   assets/       Icons and optimised hero images
   components/   Reusable UI: navbar, cards, drawer, pagination, sections
   hooks/        useCatalogue, useProductDetail, useDocumentTitle
   pages/        Home, Products, ProductDetail, Cart, Checkout, NotFound
-  store/        Redux slices/selectors and cart persistence helpers
+  store/        Redux slices/selectors and cart persistence adapter
   test/         Vitest setup
   utils/        Currency formatting and catalogue helpers
 ```
+
+## Backend integration readiness
+
+- **Service boundary:** product fetching goes through `src/services/productService.js`
+  and `src/services/apiClient.js` (with `src/api/productApi.js` kept as a compatibility
+  layer), so the DummyJSON source can be swapped for backend endpoints later.
+- **Domain models:** shared product/cart/checkout shapes live in `src/domain/*`
+  (e.g. cart line items, totals, and order-draft creation/validation) to keep UI
+  and state aligned on a stable contract.
+- **Checkout is review-only:** the checkout flow validates customer details and
+  builds an **order draft** for review, but does not submit, persist, or fake an
+  order/payment.
+- **Cart persistence seam:** the cart currently uses a local-storage adapter as a
+  fallback (`src/store/cartStorage.js`); this can be replaced with a server-backed
+  cart/session source when auth and backend cart APIs are added.
 
 ## Testing notes
 
@@ -117,7 +134,6 @@ npm test
 
 ## Roadmap
 
-1. Backend integration: authentication, orders, real stock and payments.
-2. Richer product discovery (related items, recently viewed) once the backend
-   data model is defined.
-3. Improve the checkout/order flow when a backend is available.
+1. Backend integration: authentication, server-backed cart, orders, real stock and payments.
+2. Connect the checkout review flow to a real order API (create/confirm order, error handling, order status).
+3. Richer product discovery (recently viewed, recommendations) once backend data and analytics are available.
