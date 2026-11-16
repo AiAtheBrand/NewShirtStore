@@ -35,6 +35,11 @@ VITE_ORDERS_ENABLED=true
 
 Then restart the Vite dev server.
 
+## Database
+- Uses SQLite by default (`sqlite:///./shirtstore.db`) via SQLModel.
+- Tables are created on startup and curated products are seeded automatically when the product table is empty.
+- Override with `DATABASE_URL` environment variable if needed.
+
 ## Notes
-- Product and order storage is in-memory in this scaffold (resets on restart). Replace with a database (e.g. SQLite/PostgreSQL) as the next step.
-- Auth, payments, and real stock/order lifecycle are not implemented yet.
+- Product/order persistence is local SQLite in this step (no migrations/auth/payments/order lifecycle yet).
+- Expand the dataset, add migrations, auth, cart endpoints, and production config as next steps.
