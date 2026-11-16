@@ -91,3 +91,21 @@ export function trackRecentlyViewed(product) {
   saveRecentlyViewed(next);
   return next;
 }
+
+export function clearRecentlyViewed() {
+  const storage = getStorage();
+  if (!storage) {
+    cachedRaw = null;
+    cachedItems = EMPTY;
+    return;
+  }
+
+  try {
+    storage.removeItem(RECENTLY_VIEWED_KEY);
+  } catch {
+    // Ignore storage access failures.
+  }
+
+  cachedRaw = null;
+  cachedItems = EMPTY;
+}

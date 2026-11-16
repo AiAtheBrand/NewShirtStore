@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   RECENTLY_VIEWED_KEY,
+  clearRecentlyViewed,
   loadRecentlyViewed,
   trackRecentlyViewed,
 } from './recentlyViewedStorage';
@@ -32,5 +33,13 @@ describe('recently viewed storage', () => {
   it('ignores invalid stored data', () => {
     window.localStorage.setItem(RECENTLY_VIEWED_KEY, '{bad');
     expect(loadRecentlyViewed()).toEqual([]);
+  });
+
+  it('clears stored recently viewed items', () => {
+    trackRecentlyViewed(shirt);
+    clearRecentlyViewed();
+
+    expect(loadRecentlyViewed()).toEqual([]);
+    expect(window.localStorage.getItem(RECENTLY_VIEWED_KEY)).toBeNull();
   });
 });

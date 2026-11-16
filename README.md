@@ -26,6 +26,8 @@ This is a learning project and a portfolio piece, not a production shop.
   The cart is persisted to `localStorage` so a refresh does not clear it.
   Drawer and `/cart` both lead to the demo checkout. Accessible dialog semantics
   with focus trapping, Escape to close and background scroll locking.
+- **Recently viewed** — product detail views are stored locally on-device and
+  surfaced on the home and product pages, with a one-click clear action.
 - **Responsive layout** — desktop and mobile navigation, responsive hero
   images, skeleton loading states and empty/error states.
 - **Demo checkout** — client-side validation with an explicit notice that no

@@ -91,7 +91,7 @@ function ProductDetails({ product }) {
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const { items = [] } = useCatalogue();
-  const { items: recentlyViewed, track } = useRecentlyViewed(product.id);
+  const { items: recentlyViewed, track, clear } = useRecentlyViewed(product.id);
 
   useEffect(() => {
     track(product);
@@ -410,7 +410,7 @@ function ProductDetails({ product }) {
         </section>
       )}
 
-      <RecentlyViewed items={recentlyViewed} />
+      <RecentlyViewed items={recentlyViewed} onClear={clear} />
     </main>
   );
 }

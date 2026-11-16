@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import {
   RECENTLY_VIEWED_KEY,
+  clearRecentlyViewed as clearItems,
   loadRecentlyViewed,
   trackRecentlyViewed as trackItem,
 } from '../store/recentlyViewedStorage';
@@ -44,5 +45,10 @@ export function useRecentlyViewed(excludeId) {
     notifyLocal();
   }, []);
 
-  return { items: filtered, track };
+  const clear = useCallback(() => {
+    clearItems();
+    notifyLocal();
+  }, []);
+
+  return { items: filtered, track, clear };
 }

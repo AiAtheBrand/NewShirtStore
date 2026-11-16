@@ -9,7 +9,7 @@ import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 
 function Home() {
   useDocumentTitle('ShirtStore — Modern clothing for everyday style');
-  const { items: recentlyViewed } = useRecentlyViewed();
+  const { items: recentlyViewed, clear } = useRecentlyViewed();
 
   return (
     <main>
@@ -18,7 +18,7 @@ function Home() {
       {recentlyViewed.length > 0 && (
         <section className="px-6 pb-4 md:px-10 lg:px-16">
           <div className="mx-auto max-w-7xl">
-            <RecentlyViewed items={recentlyViewed} />
+            <RecentlyViewed items={recentlyViewed} onClear={clear} />
           </div>
         </section>
       )}
