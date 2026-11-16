@@ -4,7 +4,7 @@ from collections.abc import Generator
 from sqlmodel import Session, SQLModel, create_engine, select
 
 from app.data import PRODUCTS
-from app.models import Order, Product
+from app.models import Cart, Order, Product
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./shirtstore.db")
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}

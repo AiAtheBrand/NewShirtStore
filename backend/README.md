@@ -31,6 +31,7 @@ Set in the frontend `.env`:
 ```env
 VITE_API_URL=http://localhost:8000
 VITE_ORDERS_ENABLED=true
+VITE_CART_API_ENABLED=true
 ```
 
 Then restart the Vite dev server.

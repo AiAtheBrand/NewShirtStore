@@ -1,6 +1,12 @@
+from datetime import datetime, timezone
 from typing import Any, Optional
+
 from sqlalchemy import Column, JSON
 from sqlmodel import Field, SQLModel
+
+
+def utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat()
 
 
 class Product(SQLModel, table=True):
@@ -28,3 +34,11 @@ class Order(SQLModel, table=True):
     status: str = "submitted"
     draft: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
     message: str = "Order received."
+    created_at: str = Field(default_factory=utc_now)
+
+
+class Cart(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    session_key: str = Field(index=True, unique=True)
+    items: list[dict[str, Any]] = Field(default_factory=list, sa_column=Column(JSON))
+    updated_at: str = Field(default_factory=utc_now)
