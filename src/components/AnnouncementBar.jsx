@@ -9,7 +9,7 @@ function AnnouncementBar() {
   return (
     <div className="flex items-center justify-center gap-3 bg-black px-4 py-2 text-center text-xs text-white sm:text-sm">
       <p>
-        Demo storefront — products and prices come from the DummyJSON API.
+        Products and prices are sourced from the connected catalogue API.
         <Link to="/products" className="ml-1 font-semibold underline">
           Browse products
         </Link>

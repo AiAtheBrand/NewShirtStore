@@ -29,8 +29,8 @@ function Hero() {
           </h1>
 
           <p className="mt-6 max-w-lg text-gray-600">
-            Shirts, dresses, tops, shoes, bags and sunglasses — a curated demo
-            storefront with live product data from the DummyJSON API.
+            Shirts, dresses, tops, shoes, bags and sunglasses — a curated
+            storefront with live product data from the connected catalogue API.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">

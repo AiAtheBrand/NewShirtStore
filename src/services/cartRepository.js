@@ -3,6 +3,10 @@ import { clearPersistedCart, loadCart, saveCart } from '../store/cartStorage';
 
 const CART_SESSION_KEY = 'shirtstore.cartSession.v1';
 
+export function getCartSessionId() {
+  return getOrCreateSessionId();
+}
+
 function isCartApiEnabled() {
   return import.meta.env.VITE_CART_API_ENABLED === 'true';
 }
@@ -41,7 +45,7 @@ async function requestCart(path, options = {}) {
  * Cart persistence boundary.
  *
  * Uses server-backed /cart when VITE_CART_API_ENABLED=true, with localStorage
- * fallback/cache for resilience and demo use.
+ * fallback/cache for resilience and offline use.
  */
 export const cartRepository = {
   async load() {
@@ -79,6 +83,23 @@ export const cartRepository = {
       await requestCart('/cart', { method: 'DELETE' });
     } catch {
       // Ignore server clear failures; local cart is already cleared.
+    }
+  },
+
+  async merge(items = []) {
+    if (!isCartApiEnabled()) return Array.isArray(items) ? items : [];
+    const sessionId = getOrCreateSessionId();
+    try {
+      const data = await apiRequest('/cart/merge', {
+        method: 'POST',
+        headers: sessionId ? { 'X-Cart-Session': sessionId } : undefined,
+        body: JSON.stringify({ items }),
+      });
+      const merged = Array.isArray(data?.items) ? data.items : [];
+      saveCart(merged);
+      return merged;
+    } catch {
+      return loadCart();
     }
   },
 };

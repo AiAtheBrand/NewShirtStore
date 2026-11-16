@@ -136,7 +136,7 @@ function Checkout() {
     <main className="mx-auto max-w-6xl px-6 py-12">
       <header>
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">
-          Demo checkout review
+          Checkout review
         </p>
 
         <h1 className="mt-2 text-4xl font-black tracking-tight">CHECKOUT</h1>
@@ -144,7 +144,7 @@ function Checkout() {
         <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-500">
           Review your details and cart. The form is validated and an order draft is
           submitted through the backend service when enabled; otherwise submission is
-          reported as unavailable. No payment is processed in this app.
+          reported as unavailable. Payment processing is not configured.
         </p>
       </header>
 
@@ -182,7 +182,7 @@ function Checkout() {
                 ? ` ${submissionState.message} Nothing was charged, and your cart is unchanged.`
                 : submissionState.status === 'success'
                   ? ` ${submissionState.message}${submissionState.result?.id ? ` Order ID: ${submissionState.result.id}.` : ''} Payment processing and cart-clearing policy depend on the connected backend.`
-                  : ' The draft was prepared for backend submission, but this demo has no connected order backend. No order was created, nothing was charged, and your cart is unchanged.'}
+                  : ' The draft was prepared for backend submission, but no order backend is connected. No order was created, nothing was charged, and your cart is unchanged.'}
           </p>
 
           <dl
@@ -364,7 +364,7 @@ function Checkout() {
             </div>
 
             <p className="mt-2 text-xs text-gray-500">
-              Shipping and taxes are not calculated in this demo.
+              Shipping and taxes are not calculated at this step.
             </p>
 
             <button

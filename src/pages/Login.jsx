@@ -26,7 +26,8 @@ function Login() {
     e.preventDefault();
     const result = await dispatch(loginUser(form));
     if (loginUser.fulfilled.match(result)) {
-      const items = await cartRepository.load();
+      const localItems = await cartRepository.load().catch(() => []);
+      const items = await cartRepository.merge(localItems).catch(() => cartRepository.load());
       if (Array.isArray(items)) dispatch(replaceCart(items));
       navigate(from, { replace: true });
     }

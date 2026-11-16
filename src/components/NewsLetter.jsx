@@ -22,8 +22,8 @@ function Newsletter() {
           </h2>
 
           <p className="mt-3 text-xs text-gray-400">
-            Demo form — your email is kept in memory only and is never sent or
-            stored.
+            Your email is kept locally in this session only and is not sent or
+            stored by a mailing service.
           </p>
         </div>
 
@@ -54,7 +54,7 @@ function Newsletter() {
           </button>
 
           <p aria-live="polite" className="min-h-5 text-center text-sm text-green-400">
-            {subscribed && 'Thanks! This is a demo, so no email was sent.'}
+            {subscribed && 'Thanks for subscribing! No email was sent.'}
           </p>
         </form>
       </div>

@@ -29,8 +29,8 @@ function Footer() {
           </Link>
 
           <p className="mt-4 max-w-xs text-sm leading-6 text-gray-500">
-            A curated demo storefront for modern clothing, shoes and
-            accessories. Built with React, Redux Toolkit and Tailwind CSS.
+            A curated storefront for modern clothing, shoes and accessories.
+            Built with React, Redux Toolkit and Tailwind CSS.
           </p>
         </div>
 
@@ -71,7 +71,7 @@ function Footer() {
           </h3>
 
           <ul className="space-y-3 text-sm text-gray-500">
-            <li>Demo checkout — no payments are taken.</li>
+            <li>Payments are not yet available.</li>
             <li>
               Product data from{' '}
               <a
@@ -92,7 +92,7 @@ function Footer() {
       </div>
 
       <div className="mx-auto mt-10 flex max-w-7xl flex-col gap-2 border-t border-gray-300 pt-6 text-center text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between sm:text-left">
-        <p>ShirtStore © 2026. Demo project — not a real shop.</p>
+        <p>ShirtStore © 2026. All rights reserved.</p>
         <p>Prices shown in USD.</p>
       </div>
     </footer>

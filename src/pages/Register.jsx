@@ -23,7 +23,8 @@ function Register() {
     e.preventDefault();
     const result = await dispatch(registerUser(form));
     if (registerUser.fulfilled.match(result)) {
-      const items = await cartRepository.load();
+      const localItems = await cartRepository.load().catch(() => []);
+      const items = await cartRepository.merge(localItems).catch(() => cartRepository.load());
       if (Array.isArray(items)) dispatch(replaceCart(items));
       navigate('/', { replace: true });
     }

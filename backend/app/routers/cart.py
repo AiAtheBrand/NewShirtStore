@@ -79,3 +79,71 @@ def clear_cart(
     session.add(cart)
     session.commit()
     return {"items": [], "updatedAt": cart.updated_at}
+
+
+@router.post("/merge")
+def merge_cart(
+    payload: CartPayload,
+    x_cart_session: str | None = Header(default=None),
+    session: Session = Depends(get_session),
+    current_user: User | None = Depends(get_current_user_optional),
+):
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required to merge carts.")
+
+    user_cart = resolve_cart(session, current_user, None)
+    by_id = {int(item.get("id")): dict(item) for item in user_cart.items if item.get("id") is not None}
+
+    incoming = payload.items or []
+    # Also merge guest session cart if present.
+    if x_cart_session and x_cart_session.strip():
+        guest = session.exec(select(Cart).where(Cart.session_key == x_cart_session.strip())).first()
+        if guest and guest.items:
+            incoming = [*guest.items, *incoming]
+
+    for item in incoming:
+        pid = item.get("id")
+        if pid is None:
+            continue
+        pid = int(pid)
+        qty = int(item.get("quantity") or 0)
+        if qty < 1:
+            continue
+        stock = item.get("stock")
+        try:
+            stock_limit = max(0, int(stock)) if stock is not None else qty
+        except Exception:
+            stock_limit = qty
+        if stock_limit <= 0:
+            continue
+        qty = min(qty, stock_limit)
+
+        if pid in by_id:
+            existing = by_id[pid]
+            existing_stock = existing.get("stock", stock_limit)
+            try:
+                existing_limit = max(0, int(existing_stock)) if existing_stock is not None else qty
+            except Exception:
+                existing_limit = qty
+            existing["quantity"] = min(int(existing.get("quantity") or 0) + qty, existing_limit or qty)
+        else:
+            merged = dict(item)
+            merged["id"] = pid
+            merged["quantity"] = qty
+            by_id[pid] = merged
+
+    user_cart.items = list(by_id.values())
+    user_cart.updated_at = utc_now()
+    session.add(user_cart)
+
+    # Clear guest cart after merge.
+    if x_cart_session and x_cart_session.strip():
+        guest = session.exec(select(Cart).where(Cart.session_key == x_cart_session.strip())).first()
+        if guest:
+            guest.items = []
+            guest.updated_at = utc_now()
+            session.add(guest)
+
+    session.commit()
+    session.refresh(user_cart)
+    return {"items": user_cart.items, "updatedAt": user_cart.updated_at}

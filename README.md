@@ -1,17 +1,13 @@
 # ShirtStore
 
 A curated fashion storefront built with React, Redux Toolkit, React Router and
-Tailwind CSS. Products come live from the [DummyJSON](https://dummyjson.com)
-API; everything else — filtering, sorting, pagination, the cart and the demo
-checkout — runs in the browser.
-
-This is a learning project and a portfolio piece, not a production shop.
+Tailwind CSS. Products come from a connected catalogue API; filtering, sorting,
+pagination, cart, and checkout review run in the browser.
 
 ## Features
 
 - **Curated catalogue** — men's shirts, women's dresses, tops, men's and
-  women's shoes, women's bags and sunglasses. The API is not clothing-only, so
-  the storefront filters to a business-defined category whitelist.
+  women's shoes, women's bags and sunglasses, with category-scoped browsing.
 - **Catalogue browsing** — URL-driven search, category and price filters,
   sorting and pagination. Filters survive refreshes and can be shared as links.
 - **Shared catalogue state** — the catalogue is fetched once and cached in
@@ -23,15 +19,18 @@ This is a learning project and a portfolio piece, not a production shop.
   per product id.
 - **Cart drawer and cart page** — add to cart (from cards or the detail page),
   adjust quantities (capped by stock), remove items, and review a live subtotal.
-  The cart is persisted to `localStorage` so a refresh does not clear it.
-  Drawer and `/cart` both lead to the demo checkout. Accessible dialog semantics
-  with focus trapping, Escape to close and background scroll locking.
+  Cart state persists locally and can sync with the backend cart API when enabled.
+  Drawer and `/cart` lead to checkout review. Accessible dialog semantics with
+  focus trapping, Escape to close and background scroll locking.
 - **Recently viewed** — product detail views are stored locally on-device and
   surfaced on the home and product pages, with a one-click clear action.
+- **Authentication** — basic login/register/logout flows integrated with the
+  backend JWT auth endpoints.
+- **Checkout** — client-side validation and order-draft submission through the
+  backend service when enabled, with clear handling when order submission or
+  payment processing is unavailable.
 - **Responsive layout** — desktop and mobile navigation, responsive hero
   images, skeleton loading states and empty/error states.
-- **Demo checkout** — client-side validation with an explicit notice that no
-  order is created and no payment is taken.
 - **Tests** — Vitest and React Testing Library cover utilities, Redux slices
   and key UI components.
 
@@ -144,7 +143,7 @@ npm test
 - **Auth is basic.** JWT auth endpoints and basic frontend login/register/logout flows exist, but account management, token refresh, and richer user/cart-merge UX are still minimal.
 - **No payments.** Orders can be submitted/confirmed by the backend when enabled, but payment processing is not implemented.
 - **Operational hardening pending.** Migrations, admin/role controls, rate limiting, production security/CORS, and richer order fulfillment workflows are still to be added.
-- **Sample reviews & demo newsletter.** Testimonials are placeholder content and newsletter stays local/demo-only.
+- **Content integrations.** Testimonials are static content and newsletter subscription is stored locally only (no mailing service integration).
 
 ## Roadmap
 

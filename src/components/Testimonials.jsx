@@ -20,14 +20,10 @@ function Testimonials() {
   return (
     <section className="px-6 py-16 md:px-10 lg:px-16">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-2 flex flex-wrap items-end justify-between gap-3">
+        <div className="mb-2">
           <h2 className="text-3xl font-black md:text-4xl">
             WHAT CUSTOMERS SAY
           </h2>
-
-          <p className="text-xs uppercase tracking-[0.15em] text-gray-400">
-            Sample reviews for this demo
-          </p>
         </div>
 
         <div className="mt-8 grid gap-5 md:grid-cols-3">

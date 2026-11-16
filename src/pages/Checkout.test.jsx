@@ -52,7 +52,7 @@ describe('Checkout page', () => {
 
     await user.type(screen.getByLabelText(/full name/i), 'Test User');
     await user.type(screen.getByLabelText(/email address/i), 'test@example.com');
-    await user.type(screen.getByLabelText(/street address/i), '1 Demo Street');
+    await user.type(screen.getByLabelText(/street address/i), '1 Main Street');
     await user.type(screen.getByLabelText(/city/i), 'Lagos');
     await user.type(screen.getByLabelText(/phone number/i), '08012345678');
     await user.click(

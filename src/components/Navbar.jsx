@@ -132,6 +132,12 @@ function Navbar() {
             <div className="hidden items-center gap-3 md:flex">
               {user ? (
                 <>
+                  <Link
+                    to="/orders"
+                    className="text-sm font-semibold underline underline-offset-4"
+                  >
+                    Orders
+                  </Link>
                   <span className="max-w-28 truncate text-sm text-gray-600">
                     {user.fullName || user.email}
                   </span>
@@ -196,13 +202,22 @@ function Navbar() {
                 </Link>
               ))}
               {user ? (
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="py-3 text-left text-sm font-medium"
-                >
-                  Logout ({user.fullName || user.email})
-                </button>
+                <>
+                  <Link
+                    to="/orders"
+                    onClick={() => setMenuOpen(false)}
+                    className="border-b border-gray-100 py-3 text-sm font-medium"
+                  >
+                    Orders
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="py-3 text-left text-sm font-medium"
+                  >
+                    Logout ({user.fullName || user.email})
+                  </button>
+                </>
               ) : (
                 <Link
                   to="/login"

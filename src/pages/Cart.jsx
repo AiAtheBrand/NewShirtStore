@@ -154,15 +154,14 @@ function Cart() {
             </div>
 
             <p className="mt-2 text-xs text-gray-500">
-              Shipping and taxes are not included. Checkout is a demo and does
-              not place a real order.
+              Shipping and taxes are not included at this step.
             </p>
 
             <Link
               to="/checkout"
               className="mt-6 block w-full rounded-full bg-black px-6 py-3 text-center text-sm font-semibold text-white transition hover:bg-gray-800"
             >
-              Proceed to demo checkout
+              Proceed to checkout
             </Link>
 
             <Link
