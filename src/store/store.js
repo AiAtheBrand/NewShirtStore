@@ -2,19 +2,23 @@ import { configureStore } from '@reduxjs/toolkit';
 import productReducer from './productSlice';
 import cartReducer, { replaceCart, selectCartItems } from './cartSlice';
 import newsletterReducer from './newsLetterSlice';
+import authReducer, { initializeAuth } from './authSlice';
 import { cartRepository } from '../services/cartRepository';
 import { loadCart } from './cartStorage';
+import { getStoredToken } from '../services/authService';
 
 export const store = configureStore({
   reducer: {
     products: productReducer,
     cart: cartReducer,
     newsletter: newsletterReducer,
+    auth: authReducer,
   },
   preloadedState: {
     // Synchronous preload keeps first paint stable; repository remains the
     // persistence boundary for future async/server-backed cart hydration.
     cart: { items: loadCart() },
+    auth: { token: getStoredToken(), user: null, status: 'idle', error: null },
   },
 });
 
@@ -45,3 +49,5 @@ void cartRepository.load().then((items) => {
     lastCartItems = selectCartItems(store.getState());
   }
 });
+
+void store.dispatch(initializeAuth());

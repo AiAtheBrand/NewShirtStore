@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import CartDrawer from './CartDrawer';
-import { selectCartCount } from '../store/cartSlice';
+import { replaceCart, selectCartCount } from '../store/cartSlice';
+import { logout, selectAuthUser } from '../store/authSlice';
+import { cartRepository } from '../services/cartRepository';
 import cartIcon from '../assets/icons/cart-icon.svg';
 import magnifyIcon from '../assets/icons/magnify-icon.svg';
 
@@ -61,7 +63,9 @@ function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const cartCount = useSelector(selectCartCount);
+  const user = useSelector(selectAuthUser);
   const location = useLocation();
+  const dispatch = useDispatch();
 
   const closeCart = useCallback(() => setCartOpen(false), []);
 
@@ -77,6 +81,13 @@ function Navbar() {
   }, [menuOpen]);
 
   const currentPath = `${location.pathname}${location.search}`;
+
+  const handleLogout = async () => {
+    dispatch(logout());
+    const items = await cartRepository.load();
+    if (Array.isArray(items)) dispatch(replaceCart(items));
+    setMenuOpen(false);
+  };
 
   return (
     <>
@@ -116,6 +127,30 @@ function Navbar() {
           <div className="flex items-center gap-3">
             <div className="hidden w-56 lg:block xl:w-72">
               <SearchForm id="desktop-search" />
+            </div>
+
+            <div className="hidden items-center gap-3 md:flex">
+              {user ? (
+                <>
+                  <span className="max-w-28 truncate text-sm text-gray-600">
+                    {user.fullName || user.email}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="text-sm font-semibold underline underline-offset-4"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <Link
+                  to="/login"
+                  className="text-sm font-semibold underline underline-offset-4"
+                >
+                  Login
+                </Link>
+              )}
             </div>
 
             <button
@@ -160,6 +195,23 @@ function Navbar() {
                   {link.label}
                 </Link>
               ))}
+              {user ? (
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="py-3 text-left text-sm font-medium"
+                >
+                  Logout ({user.fullName || user.email})
+                </button>
+              ) : (
+                <Link
+                  to="/login"
+                  onClick={() => setMenuOpen(false)}
+                  className="py-3 text-sm font-medium"
+                >
+                  Login
+                </Link>
+              )}
             </nav>
           </div>
         )}

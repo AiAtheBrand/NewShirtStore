@@ -141,7 +141,7 @@ npm test
 
 ## Current limitations
 
-- **Auth UI not yet built.** Backend JWT auth endpoints exist, but the frontend does not yet provide sign-in/register/account flows.
+- **Auth is basic.** JWT auth endpoints and basic frontend login/register/logout flows exist, but account management, token refresh, and richer user/cart-merge UX are still minimal.
 - **No payments.** Orders can be submitted/confirmed by the backend when enabled, but payment processing is not implemented.
 - **Operational hardening pending.** Migrations, admin/role controls, rate limiting, production security/CORS, and richer order fulfillment workflows are still to be added.
 - **Sample reviews & demo newsletter.** Testimonials are placeholder content and newsletter stays local/demo-only.
