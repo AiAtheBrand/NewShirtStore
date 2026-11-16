@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router-dom';
+import ProductCard from '../components/ProductCard';
+import { useCatalogue } from '../hooks/useCatalogue';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useProductDetail } from '../hooks/useProductDetail';
 import {
@@ -86,10 +88,22 @@ function ProductDetails({ product }) {
   const [selectedImage, setSelectedImage] = useState(product.images?.[0] ?? product.thumbnail);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  const { items = [] } = useCatalogue();
 
   const quantityInCart = useSelector((state) =>
     selectCartQuantityById(state, product.id),
   );
+
+  const catalogueItems = Array.isArray(items) ? items : [];
+
+  const relatedProducts = useMemo(() => {
+    const sameCategory = catalogueItems.filter(
+      (item) => item.category === product.category && item.id !== product.id,
+    );
+    const fallback = catalogueItems.filter((item) => item.id !== product.id);
+
+    return (sameCategory.length > 0 ? sameCategory : fallback).slice(0, 4);
+  }, [catalogueItems, product.category, product.id]);
 
   const stock = Number(product.stock);
   const hasStock = Number.isFinite(stock) && stock > 0;
@@ -361,6 +375,34 @@ function ProductDetails({ product }) {
           </Link>
         </div>
       </div>
+
+      {relatedProducts.length > 0 && (
+        <section aria-labelledby="related-products-title" className="mt-16 border-t border-gray-200 pt-12">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <h2 id="related-products-title" className="text-2xl font-black md:text-3xl">
+                You might also like
+              </h2>
+              <p className="mt-2 text-sm text-gray-500">
+                More from {formatCategoryLabel(product.category)} and the collection.
+              </p>
+            </div>
+
+            <Link
+              to={`/products?category=${product.category}`}
+              className="text-sm font-semibold underline underline-offset-4 transition hover:text-gray-600"
+            >
+              See more
+            </Link>
+          </div>
+
+          <div className="mt-8 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+            {relatedProducts.map((item) => (
+              <ProductCard key={item.id} product={item} />
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

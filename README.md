@@ -18,12 +18,14 @@ This is a learning project and a portfolio piece, not a production shop.
   Redux. A thunk `condition` prevents duplicate requests, including the double
   effect React StrictMode runs in development.
 - **Product details** — dedicated product pages with an image gallery, quantity
-  picker, discount and stock information, shipping/returns metadata and breadcrumb
-  navigation. Detail requests are cached per product id.
-- **Cart drawer** — add to cart (from cards or the detail page), quantity
-  controls capped by stock, remove items, live item count and subtotal. The cart
-  is persisted to `localStorage` so a refresh does not clear it. Accessible dialog
-  semantics with focus trapping, Escape to close and background scroll locking.
+  picker, discount and stock information, shipping/returns metadata, breadcrumb
+  navigation, and related products from the catalogue. Detail requests are cached
+  per product id.
+- **Cart drawer and cart page** — add to cart (from cards or the detail page),
+  adjust quantities (capped by stock), remove items, and review a live subtotal.
+  The cart is persisted to `localStorage` so a refresh does not clear it.
+  Drawer and `/cart` both lead to the demo checkout. Accessible dialog semantics
+  with focus trapping, Escape to close and background scroll locking.
 - **Responsive layout** — desktop and mobile navigation, responsive hero
   images, skeleton loading states and empty/error states.
 - **Demo checkout** — client-side validation with an explicit notice that no
@@ -86,7 +88,7 @@ src/
   assets/       Icons and optimised hero images
   components/   Reusable UI: navbar, cards, drawer, pagination, sections
   hooks/        useCatalogue, useProductDetail, useDocumentTitle
-  pages/        Home, Products, ProductDetail, Checkout, NotFound
+  pages/        Home, Products, ProductDetail, Cart, Checkout, NotFound
   store/        Redux slices/selectors and cart persistence helpers
   test/         Vitest setup
   utils/        Currency formatting and catalogue helpers

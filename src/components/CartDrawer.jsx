@@ -239,13 +239,26 @@ function CartDrawer({ isOpen, onClose }) {
               Shipping and taxes are not included.
             </p>
 
-            <button
-              type="button"
-              onClick={goToCheckout}
-              className="mt-4 w-full rounded-full bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-gray-800"
-            >
-              Checkout
-            </button>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  navigate('/cart');
+                }}
+                className="rounded-full border border-gray-300 px-6 py-3 text-sm font-semibold transition hover:border-black"
+              >
+                View cart
+              </button>
+
+              <button
+                type="button"
+                onClick={goToCheckout}
+                className="rounded-full bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-gray-800"
+              >
+                Checkout
+              </button>
+            </div>
           </div>
         )}
       </div>
