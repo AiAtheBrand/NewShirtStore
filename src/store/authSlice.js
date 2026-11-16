@@ -55,6 +55,7 @@ const authSlice = createSlice({
     user: null,
     status: 'idle',
     error: null,
+    initialized: false,
   },
   reducers: {
     logout(state) {
@@ -62,6 +63,7 @@ const authSlice = createSlice({
       state.user = null;
       state.status = 'idle';
       state.error = null;
+      state.initialized = true;
       setStoredToken(null);
     },
     clearAuthError(state) {
@@ -81,6 +83,7 @@ const authSlice = createSlice({
         state.status = 'succeeded';
         state.token = action.payload.access_token;
         state.user = action.payload.user;
+        state.initialized = true;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.status = 'failed';
@@ -94,6 +97,7 @@ const authSlice = createSlice({
         state.status = 'succeeded';
         state.token = action.payload.access_token;
         state.user = action.payload.user;
+        state.initialized = true;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.status = 'failed';
@@ -102,10 +106,12 @@ const authSlice = createSlice({
       .addCase(initializeAuth.fulfilled, (state, action) => {
         state.user = action.payload.user ?? null;
         if (!action.payload.user) state.token = null;
+        state.initialized = true;
       })
       .addCase(initializeAuth.rejected, (state) => {
         state.token = null;
         state.user = null;
+        state.initialized = true;
       });
   },
 });
@@ -113,5 +119,6 @@ const authSlice = createSlice({
 export const { logout, clearAuthError, hydrateToken } = authSlice.actions;
 export const selectAuth = (state) => state.auth;
 export const selectAuthUser = (state) => state.auth.user;
-export const selectIsAuthenticated = (state) => Boolean(state.auth.token);
+export const selectIsAuthenticated = (state) => Boolean(state.auth.token && state.auth.user);
+export const selectAuthInitialized = (state) => Boolean(state.auth.initialized);
 export default authSlice.reducer;

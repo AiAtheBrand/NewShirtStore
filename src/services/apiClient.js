@@ -46,6 +46,17 @@ export async function apiRequest(path, options = {}) {
       detail = null;
     }
 
+    if (response.status === 401 && token) {
+      try {
+        window.localStorage.removeItem(AUTH_TOKEN_KEY);
+      } catch {
+        // ignore
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('shirtstore:auth-expired'));
+      }
+    }
+
     throw new ApiError(
       detail || `API request failed (${response.status} ${response.statusText})`,
       {

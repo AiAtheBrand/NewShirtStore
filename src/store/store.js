@@ -2,7 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import productReducer from './productSlice';
 import cartReducer, { replaceCart, selectCartItems } from './cartSlice';
 import newsletterReducer from './newsLetterSlice';
-import authReducer, { initializeAuth } from './authSlice';
+import authReducer, { initializeAuth, logout } from './authSlice';
 import { cartRepository } from '../services/cartRepository';
 import { loadCart } from './cartStorage';
 import { getStoredToken } from '../services/authService';
@@ -18,7 +18,13 @@ export const store = configureStore({
     // Synchronous preload keeps first paint stable; repository remains the
     // persistence boundary for future async/server-backed cart hydration.
     cart: { items: loadCart() },
-    auth: { token: getStoredToken(), user: null, status: 'idle', error: null },
+    auth: {
+      token: getStoredToken(),
+      user: null,
+      status: 'idle',
+      error: null,
+      initialized: false,
+    },
   },
 });
 
@@ -35,8 +41,8 @@ store.subscribe(() => {
   }
 });
 
-// Hydrate from server-backed cart when enabled; falls back to local cache.
-void cartRepository.load().then((items) => {
+async function syncCartFromRepository() {
+  const items = await cartRepository.load().catch(() => null);
   if (!Array.isArray(items)) return;
 
   const current = selectCartItems(store.getState());
@@ -48,6 +54,36 @@ void cartRepository.load().then((items) => {
     store.dispatch(replaceCart(items));
     lastCartItems = selectCartItems(store.getState());
   }
+}
+
+// Hydrate from server-backed cart when enabled; falls back to local cache.
+void syncCartFromRepository();
+
+let lastAuthKey = `${store.getState().auth.token ?? ''}|${store.getState().auth.user?.id ?? ''}`;
+store.subscribe(() => {
+  const auth = store.getState().auth;
+  const key = `${auth.token ?? ''}|${auth.user?.id ?? ''}`;
+  if (key !== lastAuthKey) {
+    lastAuthKey = key;
+    if (auth.initialized) {
+      void syncCartFromRepository();
+    }
+  }
 });
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('shirtstore:auth-expired', () => {
+    store.dispatch(logout());
+  });
+
+  window.addEventListener('storage', (event) => {
+    if (event.key !== 'shirtstore.authToken.v1') return;
+    if (!event.newValue) {
+      store.dispatch(logout());
+    } else {
+      void store.dispatch(initializeAuth());
+    }
+  });
+}
 
 void store.dispatch(initializeAuth());

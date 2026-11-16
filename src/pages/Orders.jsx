@@ -17,7 +17,7 @@ function Orders() {
   });
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) return undefined;
 
     let active = true;
     Promise.resolve().then(() => {
@@ -50,6 +50,10 @@ function Orders() {
   }, [isAuthenticated]);
 
   const { orders, status, error } = state;
+  const isUnauthorized =
+    status === 'failed' &&
+    typeof error === 'string' &&
+    /not authenticated|unauthorized|401/i.test(error);
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12 md:px-10 lg:px-16">
@@ -65,23 +69,25 @@ function Orders() {
         )}
       </header>
 
-      {!isAuthenticated ? (
-        <div className="mt-10 rounded-2xl border border-gray-200 p-8 text-center">
-          <p className="font-semibold">Sign in to view your orders.</p>
-          <Link
-            to="/login"
-            state={{ from: '/orders' }}
-            className="mt-5 inline-block rounded-full bg-black px-6 py-3 text-sm font-semibold text-white"
-          >
-            Login
-          </Link>
-        </div>
-      ) : status === 'loading' ? (
+      {status === 'idle' || status === 'loading' ? (
         <p className="mt-10 text-sm text-gray-500">Loading orders…</p>
       ) : status === 'failed' ? (
         <div className="mt-10 rounded-2xl border border-red-200 bg-red-50 p-6">
-          <p className="font-semibold text-red-900">Could not load orders.</p>
-          <p className="mt-2 text-sm text-red-700">{error}</p>
+          <p className="font-semibold text-red-900">
+            {isUnauthorized ? 'Your session has expired.' : 'Could not load orders.'}
+          </p>
+          <p className="mt-2 text-sm text-red-700">
+            {isUnauthorized ? 'Please sign in again to view your orders.' : error}
+          </p>
+          {isUnauthorized && (
+            <Link
+              to="/login"
+              state={{ from: '/orders' }}
+              className="mt-4 inline-block rounded-full bg-black px-5 py-2.5 text-sm font-semibold text-white"
+            >
+              Sign in again
+            </Link>
+          )}
         </div>
       ) : orders.length === 0 ? (
         <div className="mt-10 rounded-2xl border border-dashed border-gray-300 p-10 text-center">
