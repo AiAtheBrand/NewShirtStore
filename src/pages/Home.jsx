@@ -1,41 +1,22 @@
-
-import heroImage from '../assets/bg img/Hero.jpg'
-import { useEffect, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { fetchProducts } from '../store/productSlice'
-import ProductCard from '../components/ProductCard'
-import DressStyles from '../components/DressStyles'
-import Testimonials from '../components/Testimonials'
-import Newsletter from '../components/NewsLetter'
-import Footer from '../components/Footer'
-import NewArrival from '../components/NewArrivals'
-import Hero from '../components/Hero'
+import Hero from '../components/Hero';
+import NewArrivals from '../components/NewArrivals';
+import ShopByCategory from '../components/ShopByCategory';
+import Testimonials from '../components/Testimonials';
+import Newsletter from '../components/NewsLetter';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 function Home() {
-  const dispatch = useDispatch();
-
-  const { products, loading, error} = 
-      useSelector((state)=> state.products);
-
-  useEffect(()=> {dispatch(fetchProducts());}, [dispatch]);
-
-  const [showAll, setShowAll] = useState(false)
-
+  useDocumentTitle('ShirtStore — Modern clothing for everyday style');
 
   return (
     <main>
-
-    
-      <Hero/>
-      <NewArrival/>
-      <DressStyles/>
-      <Testimonials/>
-      <Newsletter/>
-      <Footer/>
-
-
+      <Hero />
+      <NewArrivals />
+      <ShopByCategory />
+      <Testimonials />
+      <Newsletter />
     </main>
-  )
+  );
 }
 
-export default Home
+export default Home;

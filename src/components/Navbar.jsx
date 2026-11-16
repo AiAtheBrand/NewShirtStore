@@ -66,10 +66,6 @@ function Navbar() {
   const closeCart = useCallback(() => setCartOpen(false), []);
 
   useEffect(() => {
-    setMenuOpen(false);
-  }, [location.pathname, location.search]);
-
-  useEffect(() => {
     if (!menuOpen) return undefined;
 
     const handleKeyDown = (event) => {
@@ -157,6 +153,7 @@ function Navbar() {
                 <Link
                   key={link.label}
                   to={link.to}
+                  onClick={() => setMenuOpen(false)}
                   aria-current={currentPath === link.to ? 'page' : undefined}
                   className="border-b border-gray-100 py-3 text-sm font-medium last:border-b-0"
                 >

@@ -1,24 +1,30 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-
-import Navbar from './components/Navbar';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import AnnouncementBar from './components/AnnouncementBar';
-import Home from './pages/Home';
+import Footer from './components/Footer';
+import Navbar from './components/Navbar';
+import ScrollToTop from './components/ScrollToTop';
 import Checkout from './pages/Checkout';
+import Home from './pages/Home';
+import NotFound from './pages/NotFound';
+import Products from './pages/Products';
 
 function App() {
-    return (
-        <BrowserRouter>
+  return (
+    <BrowserRouter>
+      <AnnouncementBar />
+      <Navbar />
+      <ScrollToTop />
 
-            <AnnouncementBar />
-            <Navbar />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/products" element={<Products />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
 
-            <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/checkout" element={<Checkout />} />
-            </Routes>
-
-        </BrowserRouter>
-    );
+      <Footer />
+    </BrowserRouter>
+  );
 }
 
 export default App;

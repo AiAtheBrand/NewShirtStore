@@ -1,16 +1,118 @@
-# React + Vite
+# ShirtStore
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A curated fashion storefront built with React, Redux Toolkit, React Router and
+Tailwind CSS. Products come live from the [DummyJSON](https://dummyjson.com)
+API; everything else — filtering, sorting, pagination, the cart and the demo
+checkout — runs in the browser.
 
-Currently, two official plugins are available:
+This is a learning project and a portfolio piece, not a production shop.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- **Curated catalogue** — men's shirts, women's dresses, tops, men's and
+  women's shoes, women's bags and sunglasses. The API is not clothing-only, so
+  the storefront filters to a business-defined category whitelist.
+- **Catalogue browsing** — URL-driven search, category and price filters,
+  sorting and pagination. Filters survive refreshes and can be shared as links.
+- **Shared catalogue state** — the catalogue is fetched once and cached in
+  Redux. A thunk `condition` prevents duplicate requests, including the double
+  effect React StrictMode runs in development.
+- **Cart drawer** — add to cart, quantity controls capped by stock, remove
+  items, live item count and subtotal. Accessible dialog semantics with focus
+  trapping, Escape to close and background scroll locking.
+- **Responsive layout** — desktop and mobile navigation, responsive hero
+  images, skeleton loading states and empty/error states.
+- **Demo checkout** — client-side validation with an explicit notice that no
+  order is created and no payment is taken.
+- **Tests** — Vitest and React Testing Library cover utilities, Redux slices
+  and key UI components.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech stack
 
-## Expanding the ESLint configuration
+| Area | Choice |
+| --- | --- |
+| UI | React 19 |
+| Build tool | Vite 8 |
+| Styling | Tailwind CSS 4 |
+| State | Redux Toolkit + React Redux |
+| Routing | React Router 7 |
+| Tests | Vitest 5 + Testing Library + jsdom |
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Getting started
+
+```bash
+npm install
+cp .env.example .env   # optional: change VITE_API_URL
+npm run dev
+```
+
+The app runs at `http://localhost:5173`.
+
+### Environment
+
+`VITE_API_URL` defaults to `https://dummyjson.com`. Vite only exposes variables
+prefixed with `VITE_` to the browser, so never put secrets in this file.
+
+## Available scripts
+
+```bash
+npm run dev        # start the Vite dev server
+npm run build      # production build into dist/
+npm run preview    # preview the production build
+npm run lint       # run ESLint
+npm test           # run the test suite once
+npm run test:watch # run tests in watch mode
+```
+
+## Data model
+
+`src/api/productApi.js` requests the full product list once with a reduced
+`select` payload, filters it to the curated fashion categories and normalises
+each record to the fields the UI needs. Components never depend on DummyJSON's
+full payload.
+
+Because the catalogue is around 35 items, filtering, sorting and pagination are
+done client-side. A larger catalogue would move those operations to the server.
+
+## Project structure
+
+```
+src/
+  api/          API request, category whitelist and normalisation
+  assets/       Icons and optimised hero images
+  components/   Reusable UI: navbar, cards, drawer, pagination, sections
+  hooks/        useCatalogue, useDocumentTitle
+  pages/        Home, Products, Checkout, NotFound
+  store/        Redux slices and selectors
+  test/         Vitest setup
+  utils/        Currency formatting and catalogue helpers
+```
+
+## Testing notes
+
+Tests use explicit imports from `vitest` rather than global test functions, so
+ESLint's browser globals configuration stays accurate. The setup file adds
+jest-dom matchers and cleans up rendered components after each test.
+
+```bash
+npm test
+```
+
+## Demo limitations
+
+- **No authentication.** The account icon is intentionally absent until a
+  backend exists.
+- **No backend or payments.** Checkout validates the form, then clearly states
+  that no order was created and nothing was charged. No personal data is logged,
+  sent or stored.
+- **Cart is in memory.** Refreshing the page clears the cart; persistence is
+  planned for the next milestone.
+- **Sample reviews.** Testimonials are placeholder content for the demo.
+- **Newsletter is a demo.** The form keeps the email in Redux only and sends
+  nothing.
+
+## Roadmap
+
+1. Product details page and product-specific routes.
+2. Cart persistence (for example `localStorage` via a small middleware).
+3. Backend integration: authentication, orders, real stock and payments.

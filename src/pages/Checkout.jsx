@@ -1,505 +1,298 @@
-// import { useSelector } from 'react-redux';
-// import { useState } from 'react';
-
-// function Checkout() {
-//     const cartItems = useSelector((state) => state.cart.items);
-
-//     const [formData, setFormData] = useState({
-//     fullName: '',
-//     email: '',
-//     address: '',
-//     city: '',
-//     phone: '',
-// });
-
-// const handleChange = (event) => {
-//     const { name, value } = event.target;
-
-//     setFormData({
-//         ...formData,
-//         [name]: value,
-//     });
-// };
-
-// const handleSubmit = (event) => {
-//     event.preventDefault();
-
-//     const newErrors = {};
-
-//     if (!formData.fullName.trim()) {
-//         newErrors.fullName = 'Full name is required';
-//     }
-
-//     if (!formData.email.trim()) {
-//         newErrors.email = 'Email is required';
-//     }
-
-//     if (!formData.address.trim()) {
-//         newErrors.address = 'Address is required';
-//     }
-
-//     if (!formData.city.trim()) {
-//         newErrors.city = 'City is required';
-//     }
-
-//     if (!formData.phone.trim()) {
-//         newErrors.phone = 'Phone number is required';
-//     }
-
-//     setErrors(newErrors);
-
-//     if (Object.keys(newErrors).length === 0) {
-//         console.log('Order ready:', formData);
-//     }
-// };
-
-//     const cartTotal = cartItems.reduce(
-//         (total, item) => total + item.price * item.quantity,
-//         0
-//     );
-
-//     return (
-//         <div className="mx-auto max-w-6xl px-6 py-12">
-//             <h1 className="text-3xl font-bold">
-//                 Checkout
-//             </h1>
-
-//             <div className="mt-10 grid gap-10 lg:grid-cols-2">
-//                 <div>
-//                     <h2 className="text-xl font-bold">
-//                         Customer Information
-//                     </h2>
-
-//                     <div className="mt-6 space-y-4">
-//                     <input
-//                             type="text"
-//                             name="fullName"
-//                             value={formData.fullName}
-//                             onChange={handleChange}
-//                             placeholder="Full Name"
-//                             className="w-full rounded-lg border px-4 py-3 outline-none"
-//                         />
-
-//                        <input
-//                             type="email"
-//                             name="email"
-//                             value={formData.email}
-//                             onChange={handleChange}
-//                             placeholder="Email Address"
-//                             className="w-full rounded-lg border px-4 py-3 outline-none"
-//                         />
-
-//                        <input
-//                             type="text"
-//                             name="address"
-//                             value={formData.address}
-//                             onChange={handleChange}
-//                             placeholder="Address"
-//                             className="w-full rounded-lg border px-4 py-3 outline-none"
-//                         />
-
-//                         <input
-//                             type="text"
-//                             name="city"
-//                             value={formData.city}
-//                             onChange={handleChange}
-//                             placeholder="City"
-//                             className="w-full rounded-lg border px-4 py-3 outline-none"
-//                         />
-
-//                         <input
-//                             type="tel"
-//                             name="phone"
-//                             value={formData.phone}
-//                             onChange={handleChange}
-//                             placeholder="Phone Number"
-//                             className="w-full rounded-lg border px-4 py-3 outline-none"
-//                         />
-//                         </div>
-//                 </div>
-//                 <div>
-//                     <h2 className="text-xl font-bold">
-//                         Order Summary
-//                     </h2>
-
-//                     <div className="mt-6 space-y-4">
-//                         {cartItems.map((item) => (
-//                             <div
-//                                 key={item.id}
-//                                 className="flex items-center justify-between" >
-//                                 <div>
-//                                     <p className="font-medium">
-//                                         {item.title}
-//                                     </p>
-
-//                                     <p className="text-sm text-gray-500">
-//                                         Qty: {item.quantity}
-//                                     </p>
-//                                 </div>
-
-//                                 <p className="font-semibold">
-//                                     ${(item.price * item.quantity).toFixed(2)}
-//                                 </p>
-//                             </div>
-//                         ))}
-//                     </div>
-
-//                     <div className="mt-8 border-t pt-6">
-//                         <div className="flex justify-between text-xl font-bold">
-//                             <span>Total</span>
-//                             <span>
-//                                 ${cartTotal.toFixed(2)}
-//                             </span>
-//                         </div>
-
-//                         <button className="mt-6 w-full rounded-full bg-black px-6 py-3 font-semibold text-white">
-//                             Place Order
-//                         </button>
-//                     </div>
-//                 </div>
-
-//             </div>
-//         </div>
-//     );
-// }
-
-// export default Checkout;
-
-
 import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { clearCart } from '../store/cartSlice';
+import { useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
+import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { selectCartItems, selectCartSubtotal } from '../store/cartSlice';
+import { formatCurrency } from '../utils/formatCurrency';
+
+const EMPTY_FORM = {
+  fullName: '',
+  email: '',
+  address: '',
+  city: '',
+  phone: '',
+};
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function validate(values) {
+  const errors = {};
+
+  if (!values.fullName.trim()) {
+    errors.fullName = 'Enter your full name.';
+  }
+
+  if (!values.email.trim()) {
+    errors.email = 'Enter your email address.';
+  } else if (!EMAIL_PATTERN.test(values.email.trim())) {
+    errors.email = 'Enter a valid email address.';
+  }
+
+  if (!values.address.trim()) {
+    errors.address = 'Enter your street address.';
+  }
+
+  if (!values.city.trim()) {
+    errors.city = 'Enter your city.';
+  }
+
+  if (!values.phone.trim()) {
+    errors.phone = 'Enter your phone number.';
+  }
+
+  return errors;
+}
+
+function FormField({
+  id,
+  label,
+  type = 'text',
+  autoComplete,
+  value,
+  error,
+  onChange,
+  placeholder,
+}) {
+  const errorId = `${id}-error`;
+
+  return (
+    <div>
+      <label htmlFor={id} className="mb-2 block text-sm font-medium">
+        {label}
+      </label>
+
+      <input
+        id={id}
+        name={id}
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        autoComplete={autoComplete}
+        required
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? errorId : undefined}
+        className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-black aria-[invalid=true]:border-red-500"
+      />
+
+      {error && (
+        <p id={errorId} className="mt-1 text-sm text-red-600">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
 
 function Checkout() {
-    const dispatch = useDispatch();
+  useDocumentTitle('Checkout — ShirtStore');
 
-    const cartItems = useSelector((state) => state.cart.items);
+  const cartItems = useSelector(selectCartItems);
+  const subtotal = useSelector(selectCartSubtotal);
 
-    const [formData, setFormData] = useState({
-        fullName: '',
-        email: '',
-        address: '',
-        city: '',
-        phone: '',
-    });
+  const [formData, setFormData] = useState(EMPTY_FORM);
+  const [errors, setErrors] = useState({});
+  const [demoSubmitted, setDemoSubmitted] = useState(false);
 
-    const [errors, setErrors] = useState({});
-    const [orderPlaced, setOrderPlaced] = useState(false);
+  const cartIsEmpty = cartItems.length === 0;
 
-    const cartTotal = cartItems.reduce(
-        (total, item) => total + item.price * item.quantity,
-        0
-    );
+  const handleChange = (event) => {
+    const { name, value } = event.target;
 
-    const handleChange = (event) => {
-        const { name, value } = event.target;
+    setFormData((current) => ({ ...current, [name]: value }));
+    setErrors((current) => ({ ...current, [name]: undefined }));
+  };
 
-        setFormData({
-            ...formData,
-            [name]: value,
-        });
-    };
+  const handleSubmit = (event) => {
+    event.preventDefault();
 
-    const handleSubmit = (event) => {
-        event.preventDefault();
+    if (cartIsEmpty) return;
 
-        const newErrors = {};
+    const nextErrors = validate(formData);
+    setErrors(nextErrors);
 
-        if (!formData.fullName.trim()) {
-            newErrors.fullName = 'Full name is required';
-        }
-
-        if (!formData.email.trim()) {
-            newErrors.email = 'Email is required';
-        }
-
-        if (!formData.address.trim()) {
-            newErrors.address = 'Address is required';
-        }
-
-        if (!formData.city.trim()) {
-            newErrors.city = 'City is required';
-        }
-
-        if (!formData.phone.trim()) {
-            newErrors.phone = 'Phone number is required';
-        }
-
-        setErrors(newErrors);
-
-        // Only place the order when there are no errors
-        if (Object.keys(newErrors).length === 0) {
-            console.log('Order ready:', formData);
-
-            // Clear the cart
-            dispatch(clearCart());
-
-            // Show success page
-            setOrderPlaced(true);
-        }
-    };
-
-    // Show this after a successful order
-    if (orderPlaced) {
-        return (
-            <div className="mx-auto max-w-2xl px-6 py-20 text-center">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-2xl">
-                    ✓
-                </div>
-
-                <h1 className="mt-6 text-4xl font-bold">
-                    Order Placed Successfully!
-                </h1>
-
-                <p className="mt-4 text-gray-500">
-                    Thank you for your order, {formData.fullName}.
-                </p>
-
-                <p className="mt-2 text-gray-500">
-                    We will contact you shortly with your order details.
-                </p>
-
-                <button
-                    onClick={() => {
-                        window.location.href = '/';
-                    }}
-                    className="mt-8 rounded-full bg-black px-8 py-3 font-semibold text-white hover:bg-gray-800"
-                >
-                    Continue Shopping
-                </button>
-            </div>
-        );
+    if (Object.keys(nextErrors).length > 0) {
+      setDemoSubmitted(false);
+      return;
     }
 
-    return (
-        <div className="mx-auto max-w-6xl px-6 py-12">
+    // There is no backend yet, so this deliberately does not clear the cart,
+    // log customer details, or pretend an order was created.
+    setDemoSubmitted(true);
+  };
 
-            {/* Page Heading */}
-            <div>
-                <h1 className="text-3xl font-bold">
-                    Checkout
-                </h1>
+  return (
+    <main className="mx-auto max-w-6xl px-6 py-12">
+      <header>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-400">
+          Demo checkout
+        </p>
 
-                <p className="mt-2 text-gray-500">
-                    Complete your information to place your order.
-                </p>
-            </div>
+        <h1 className="mt-2 text-4xl font-black tracking-tight">CHECKOUT</h1>
 
-            <div className="mt-10 grid gap-10 lg:grid-cols-2">
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-500">
+          This form validates your details, but no order is placed and no
+          payment is taken. Nothing you type is sent or stored.
+        </p>
+      </header>
 
-                {/* Customer Information */}
-                <form onSubmit={handleSubmit}>
-                    <h2 className="text-xl font-bold">
-                        Customer Information
-                    </h2>
+      {demoSubmitted && (
+        <div
+          role="status"
+          className="mt-8 rounded-2xl border border-amber-300 bg-amber-50 p-6"
+        >
+          <h2 className="text-lg font-bold">Demo checkout only</h2>
 
-                    <div className="mt-6 space-y-5">
+          <p className="mt-2 text-sm leading-6 text-amber-900">
+            Thanks, {formData.fullName.trim()}. This demo has no backend or
+            payment provider, so no order was created, nothing was charged, and
+            your cart is unchanged.
+          </p>
 
-                        {/* Full Name */}
-                        <div>
-                            <label
-                                htmlFor="fullName"
-                                className="mb-2 block text-sm font-medium"
-                            >
-                                Full Name
-                            </label>
-
-                            <input
-                                id="fullName"
-                                name="fullName"
-                                type="text"
-                                value={formData.fullName}
-                                onChange={handleChange}
-                                placeholder="Enter your full name"
-                                className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
-                            />
-
-                            {errors.fullName && (
-                                <p className="mt-1 text-sm text-red-500">
-                                    {errors.fullName}
-                                </p>
-                            )}
-                        </div>
-
-                        {/* Email */}
-                        <div>
-                            <label
-                                htmlFor="email"
-                                className="mb-2 block text-sm font-medium"
-                            >
-                                Email Address
-                            </label>
-
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                placeholder="Enter your email"
-                                className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
-                            />
-
-                            {errors.email && (
-                                <p className="mt-1 text-sm text-red-500">
-                                    {errors.email}
-                                </p>
-                            )}
-                        </div>
-
-                        {/* Address */}
-                        <div>
-                            <label
-                                htmlFor="address"
-                                className="mb-2 block text-sm font-medium"
-                            >
-                                Address
-                            </label>
-
-                            <input
-                                id="address"
-                                name="address"
-                                type="text"
-                                value={formData.address}
-                                onChange={handleChange}
-                                placeholder="Enter your address"
-                                className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
-                            />
-
-                            {errors.address && (
-                                <p className="mt-1 text-sm text-red-500">
-                                    {errors.address}
-                                </p>
-                            )}
-                        </div>
-
-                        {/* City */}
-                        <div>
-                            <label
-                                htmlFor="city"
-                                className="mb-2 block text-sm font-medium"
-                            >
-                                City
-                            </label>
-
-                            <input
-                                id="city"
-                                name="city"
-                                type="text"
-                                value={formData.city}
-                                onChange={handleChange}
-                                placeholder="Enter your city"
-                                className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
-                            />
-
-                            {errors.city && (
-                                <p className="mt-1 text-sm text-red-500">
-                                    {errors.city}
-                                </p>
-                            )}
-                        </div>
-
-                        {/* Phone */}
-                        <div>
-                            <label
-                                htmlFor="phone"
-                                className="mb-2 block text-sm font-medium"
-                            >
-                                Phone Number
-                            </label>
-
-                            <input
-                                id="phone"
-                                name="phone"
-                                type="tel"
-                                value={formData.phone}
-                                onChange={handleChange}
-                                placeholder="Enter your phone number"
-                                className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-black"
-                            />
-
-                            {errors.phone && (
-                                <p className="mt-1 text-sm text-red-500">
-                                    {errors.phone}
-                                </p>
-                            )}
-                        </div>
-
-                    </div>
-                </form>
-
-                {/* Order Summary */}
-                <div>
-                    <h2 className="text-xl font-bold">
-                        Order Summary
-                    </h2>
-
-                    <div className="mt-6 space-y-5">
-
-                        {cartItems.length === 0 ? (
-                            <p className="text-gray-500">
-                                Your cart is empty.
-                            </p>
-                        ) : (
-                            cartItems.map((item) => (
-                                <div
-                                    key={item.id}
-                                    className="flex gap-4 border-b pb-5"
-                                >
-                                    <img
-                                        src={item.thumbnail}
-                                        alt={item.title}
-                                        className="h-20 w-20 rounded-lg object-cover"
-                                    />
-
-                                    <div className="flex-1">
-                                        <p className="font-medium">
-                                            {item.title}
-                                        </p>
-
-                                        <p className="mt-1 text-sm text-gray-500">
-                                            Qty: {item.quantity}
-                                        </p>
-
-                                        <p className="mt-2 font-semibold">
-                                            $
-                                            {(
-                                                item.price *
-                                                item.quantity
-                                            ).toFixed(2)}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))
-                        )}
-
-                    </div>
-
-                    {/* Total */}
-                    <div className="mt-8 border-t pt-6">
-
-                        <div className="flex justify-between text-xl font-bold">
-                            <span>Total</span>
-
-                            <span>
-                                ${cartTotal.toFixed(2)}
-                            </span>
-                        </div>
-
-                        <button
-                            type="button"
-                            onClick={handleSubmit}
-                            disabled={cartItems.length === 0}
-                            className="mt-6 w-full rounded-full bg-black px-6 py-3 font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300"
-                        >
-                            Place Order
-                        </button>
-
-                    </div>
-                </div>
-
-            </div>
+          <button
+            type="button"
+            onClick={() => setDemoSubmitted(false)}
+            className="mt-4 rounded-full bg-black px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800"
+          >
+            Edit details
+          </button>
         </div>
-    );
+      )}
+
+      <div className="mt-10 grid gap-10 lg:grid-cols-2">
+        <form id="checkout-form" onSubmit={handleSubmit} noValidate>
+          <fieldset disabled={cartIsEmpty} className="disabled:opacity-60">
+            <legend className="text-xl font-bold">Customer information</legend>
+
+            <div className="mt-6 space-y-5">
+              <FormField
+                id="fullName"
+                label="Full name"
+                autoComplete="name"
+                value={formData.fullName}
+                error={errors.fullName}
+                onChange={handleChange}
+                placeholder="Enter your full name"
+              />
+
+              <FormField
+                id="email"
+                label="Email address"
+                type="email"
+                autoComplete="email"
+                value={formData.email}
+                error={errors.email}
+                onChange={handleChange}
+                placeholder="Enter your email"
+              />
+
+              <FormField
+                id="address"
+                label="Street address"
+                autoComplete="street-address"
+                value={formData.address}
+                error={errors.address}
+                onChange={handleChange}
+                placeholder="Enter your address"
+              />
+
+              <FormField
+                id="city"
+                label="City"
+                autoComplete="address-level2"
+                value={formData.city}
+                error={errors.city}
+                onChange={handleChange}
+                placeholder="Enter your city"
+              />
+
+              <FormField
+                id="phone"
+                label="Phone number"
+                type="tel"
+                autoComplete="tel"
+                value={formData.phone}
+                error={errors.phone}
+                onChange={handleChange}
+                placeholder="Enter your phone number"
+              />
+            </div>
+          </fieldset>
+        </form>
+
+        <section aria-labelledby="order-summary-title">
+          <h2 id="order-summary-title" className="text-xl font-bold">
+            Order summary
+          </h2>
+
+          {cartIsEmpty ? (
+            <div className="mt-6 rounded-2xl border border-dashed border-gray-300 p-8 text-center">
+              <p className="font-semibold">Your cart is empty.</p>
+              <p className="mt-2 text-sm text-gray-500">
+                Add a product before using the checkout form.
+              </p>
+
+              <Link
+                to="/products"
+                className="mt-5 inline-block rounded-full bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-gray-800"
+              >
+                Browse products
+              </Link>
+            </div>
+          ) : (
+            <ul className="mt-6 space-y-5">
+              {cartItems.map((item) => (
+                <li
+                  key={item.id}
+                  className="flex gap-4 border-b border-gray-200 pb-5"
+                >
+                  <img
+                    src={item.thumbnail}
+                    alt={item.title}
+                    width="80"
+                    height="80"
+                    className="h-20 w-20 rounded-lg object-cover"
+                  />
+
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium">{item.title}</p>
+
+                    <p className="mt-1 text-sm text-gray-500">
+                      {formatCurrency(item.price)} × {item.quantity}
+                    </p>
+
+                    <p className="mt-2 font-semibold">
+                      {formatCurrency(item.price * item.quantity)}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div className="mt-8 border-t border-gray-200 pt-6">
+            <div className="flex justify-between text-xl font-bold">
+              <span>Subtotal</span>
+              <span>{formatCurrency(subtotal)}</span>
+            </div>
+
+            <p className="mt-2 text-xs text-gray-500">
+              Shipping and taxes are not calculated in this demo.
+            </p>
+
+            <button
+              type="submit"
+              form="checkout-form"
+              disabled={cartIsEmpty}
+              className="mt-6 w-full rounded-full bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600"
+            >
+              Place demo order
+            </button>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
 }
+
 export default Checkout;
