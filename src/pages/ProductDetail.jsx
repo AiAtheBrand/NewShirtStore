@@ -1,10 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
+import RecentlyViewed from '../components/RecentlyViewed';
 import { useCatalogue } from '../hooks/useCatalogue';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { useProductDetail } from '../hooks/useProductDetail';
+import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 import {
   addToCartQuantity,
   selectCartQuantityById,
@@ -89,6 +91,11 @@ function ProductDetails({ product }) {
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const { items = [] } = useCatalogue();
+  const { items: recentlyViewed, track } = useRecentlyViewed(product.id);
+
+  useEffect(() => {
+    track(product);
+  }, [product, track]);
 
   const quantityInCart = useSelector((state) =>
     selectCartQuantityById(state, product.id),
@@ -402,6 +409,8 @@ function ProductDetails({ product }) {
           </div>
         </section>
       )}
+
+      <RecentlyViewed items={recentlyViewed} />
     </main>
   );
 }
