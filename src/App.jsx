@@ -6,6 +6,7 @@ import ScrollToTop from './components/ScrollToTop';
 import Checkout from './pages/Checkout';
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
+import ProductDetail from './pages/ProductDetail';
 import Products from './pages/Products';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/products" element={<Products />} />
+        <Route path="/products/:productId" element={<ProductDetail />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

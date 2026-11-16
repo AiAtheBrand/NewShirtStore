@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import cartReducer, {
   addToCart,
+  addToCartQuantity,
   clearCart,
   decreaseQuantity,
   increaseQuantity,
@@ -66,6 +67,23 @@ describe('cartSlice', () => {
 
   it('refuses out-of-stock products', () => {
     const state = reduce(emptyState, addToCart({ ...shirt, stock: 0 }));
+
+    expect(state.items).toEqual([]);
+  });
+
+  it('adds a chosen quantity and clamps it to stock', () => {
+    let state = reduce(
+      emptyState,
+      addToCartQuantity({ product: shirt, quantity: 3 }),
+    );
+    expect(state.items[0].quantity).toBe(2);
+
+    state = reduce(emptyState, addToCartQuantity({ product: { ...shirt, stock: 9 }, quantity: 4 }));
+    expect(state.items[0].quantity).toBe(4);
+  });
+
+  it('ignores an invalid quantity payload', () => {
+    const state = reduce(emptyState, addToCartQuantity(undefined));
 
     expect(state.items).toEqual([]);
   });

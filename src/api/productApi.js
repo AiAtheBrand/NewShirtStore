@@ -29,13 +29,35 @@ const CATALOGUE_SELECT = [
   'meta',
 ].join(',');
 
+const DETAIL_SELECT = [
+  'id',
+  'title',
+  'description',
+  'price',
+  'discountPercentage',
+  'rating',
+  'stock',
+  'brand',
+  'category',
+  'tags',
+  'thumbnail',
+  'images',
+  'sku',
+  'warrantyInformation',
+  'shippingInformation',
+  'returnPolicy',
+  'meta',
+].join(',');
+
 async function request(path) {
   const response = await fetch(`${API_URL}${path}`);
 
   if (!response.ok) {
-    throw new Error(
+    const error = new Error(
       `Product API request failed (${response.status} ${response.statusText})`,
     );
+    error.status = response.status;
+    throw error;
   }
 
   return response.json();
@@ -72,4 +94,42 @@ export async function getCatalogue() {
   return data.products
     .filter((product) => FASHION_CATEGORIES.includes(product.category))
     .map(normalizeProduct);
+}
+
+/**
+ * Loads one product with the extra fields a detail page needs (description,
+ * gallery, delivery information). The category whitelist is enforced here too,
+ * so a hand-typed URL cannot pull an unrelated product into the storefront.
+ */
+export async function getProductById(id) {
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new Error('A valid product id is required.');
+  }
+
+  const select = encodeURIComponent(DETAIL_SELECT);
+  const product = await request(`/products/${id}?select=${select}`);
+
+  if (!product || product.id !== id) {
+    throw new Error('The product API returned an unexpected response.');
+  }
+
+  if (!FASHION_CATEGORIES.includes(product.category)) {
+    throw new Error('This product is not part of the storefront catalogue.');
+  }
+
+  const images = Array.isArray(product.images) ? product.images : [];
+
+  return {
+    ...normalizeProduct(product),
+    description: product.description ?? '',
+    images:
+      images.length > 0
+        ? images
+        : [product.thumbnail].filter(Boolean),
+    discountPercentage: Number(product.discountPercentage) || 0,
+    sku: product.sku ?? null,
+    warrantyInformation: product.warrantyInformation ?? null,
+    shippingInformation: product.shippingInformation ?? null,
+    returnPolicy: product.returnPolicy ?? null,
+  };
 }

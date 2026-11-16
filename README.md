@@ -17,9 +17,13 @@ This is a learning project and a portfolio piece, not a production shop.
 - **Shared catalogue state** — the catalogue is fetched once and cached in
   Redux. A thunk `condition` prevents duplicate requests, including the double
   effect React StrictMode runs in development.
-- **Cart drawer** — add to cart, quantity controls capped by stock, remove
-  items, live item count and subtotal. Accessible dialog semantics with focus
-  trapping, Escape to close and background scroll locking.
+- **Product details** — dedicated product pages with an image gallery, quantity
+  picker, discount and stock information, shipping/returns metadata and breadcrumb
+  navigation. Detail requests are cached per product id.
+- **Cart drawer** — add to cart (from cards or the detail page), quantity
+  controls capped by stock, remove items, live item count and subtotal. The cart
+  is persisted to `localStorage` so a refresh does not clear it. Accessible dialog
+  semantics with focus trapping, Escape to close and background scroll locking.
 - **Responsive layout** — desktop and mobile navigation, responsive hero
   images, skeleton loading states and empty/error states.
 - **Demo checkout** — client-side validation with an explicit notice that no
@@ -81,9 +85,9 @@ src/
   api/          API request, category whitelist and normalisation
   assets/       Icons and optimised hero images
   components/   Reusable UI: navbar, cards, drawer, pagination, sections
-  hooks/        useCatalogue, useDocumentTitle
-  pages/        Home, Products, Checkout, NotFound
-  store/        Redux slices and selectors
+  hooks/        useCatalogue, useProductDetail, useDocumentTitle
+  pages/        Home, Products, ProductDetail, Checkout, NotFound
+  store/        Redux slices/selectors and cart persistence helpers
   test/         Vitest setup
   utils/        Currency formatting and catalogue helpers
 ```
@@ -105,14 +109,13 @@ npm test
 - **No backend or payments.** Checkout validates the form, then clearly states
   that no order was created and nothing was charged. No personal data is logged,
   sent or stored.
-- **Cart is in memory.** Refreshing the page clears the cart; persistence is
-  planned for the next milestone.
 - **Sample reviews.** Testimonials are placeholder content for the demo.
 - **Newsletter is a demo.** The form keeps the email in Redux only and sends
   nothing.
 
 ## Roadmap
 
-1. Product details page and product-specific routes.
-2. Cart persistence (for example `localStorage` via a small middleware).
-3. Backend integration: authentication, orders, real stock and payments.
+1. Backend integration: authentication, orders, real stock and payments.
+2. Richer product discovery (related items, recently viewed) once the backend
+   data model is defined.
+3. Improve the checkout/order flow when a backend is available.

@@ -1,4 +1,5 @@
 import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 import { addToCart, selectCartQuantityById } from '../store/cartSlice';
 import { formatCurrency } from '../utils/formatCurrency';
 import { formatCategoryLabel } from '../utils/catalogue';
@@ -30,14 +31,20 @@ function ProductCard({ product }) {
   return (
     <article className="group flex flex-col">
       <div className="aspect-square overflow-hidden rounded-2xl bg-gray-100">
-        <img
-          src={product.thumbnail}
-          alt={product.title}
-          loading="lazy"
-          width="400"
-          height="400"
-          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-        />
+        <Link
+          to={`/products/${product.id}`}
+          aria-label={`View ${product.title}`}
+          className="block h-full w-full"
+        >
+          <img
+            src={product.thumbnail}
+            alt={product.title}
+            loading="lazy"
+            width="400"
+            height="400"
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          />
+        </Link>
       </div>
 
       <div className="mt-4 flex flex-1 flex-col">
@@ -46,7 +53,12 @@ function ProductCard({ product }) {
         </p>
 
         <h3 className="mt-1 line-clamp-2 text-base font-semibold leading-snug">
-          {product.title}
+          <Link
+            to={`/products/${product.id}`}
+            className="transition hover:underline hover:underline-offset-4"
+          >
+            {product.title}
+          </Link>
         </h3>
 
         <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">

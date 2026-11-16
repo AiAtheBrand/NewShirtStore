@@ -21,7 +21,7 @@ function getStockLimit(stock) {
  * items small, avoids accidentally persisting the full API payload, and keeps
  * totals independent from future API response changes.
  */
-function toCartItem(product) {
+function toCartItem(product, quantity = 1) {
   return {
     id: product.id,
     title: product.title,
@@ -30,8 +30,31 @@ function toCartItem(product) {
     brand: product.brand ?? null,
     category: product.category,
     stock: product.stock,
-    quantity: 1,
+    quantity,
   };
+}
+
+function addItem(state, product, amount = 1) {
+  if (!product) return;
+
+  const stockLimit = getStockLimit(product.stock);
+  if (stockLimit <= 0) return;
+
+  const requested = Math.max(1, Math.trunc(Number(amount)) || 1);
+  const existingItem = state.items.find((item) => item.id === product.id);
+
+  if (existingItem) {
+    const existingStockLimit = getStockLimit(existingItem.stock);
+    if (existingStockLimit <= 0) return;
+
+    existingItem.quantity = Math.min(
+      existingItem.quantity + requested,
+      existingStockLimit,
+    );
+    return;
+  }
+
+  state.items.push(toCartItem(product, Math.min(requested, stockLimit)));
 }
 
 const cartSlice = createSlice({
@@ -39,27 +62,12 @@ const cartSlice = createSlice({
   initialState,
   reducers: {
     addToCart: (state, action) => {
-      const product = action.payload;
-      const stockLimit = getStockLimit(product.stock);
+      addItem(state, action.payload, 1);
+    },
 
-      if (stockLimit <= 0) return;
-
-      const existingItem = state.items.find(
-        (item) => item.id === product.id,
-      );
-
-      if (existingItem) {
-        const existingStockLimit = getStockLimit(existingItem.stock);
-        if (existingStockLimit <= 0) return;
-
-        existingItem.quantity = Math.min(
-          existingItem.quantity + 1,
-          existingStockLimit,
-        );
-        return;
-      }
-
-      state.items.push(toCartItem(product));
+    addToCartQuantity: (state, action) => {
+      const { product, quantity } = action.payload ?? {};
+      addItem(state, product, quantity);
     },
 
     increaseQuantity: (state, action) => {
@@ -95,6 +103,7 @@ const cartSlice = createSlice({
 
 export const {
   addToCart,
+  addToCartQuantity,
   increaseQuantity,
   decreaseQuantity,
   removeFromCart,

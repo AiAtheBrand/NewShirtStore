@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 import cartReducer, { selectCartCount } from '../store/cartSlice';
 import ProductCard from './ProductCard';
@@ -22,7 +23,9 @@ function renderCard(overrides = {}) {
 
   render(
     <Provider store={store}>
-      <ProductCard product={{ ...product, ...overrides }} />
+      <MemoryRouter>
+        <ProductCard product={{ ...product, ...overrides }} />
+      </MemoryRouter>
     </Provider>,
   );
 

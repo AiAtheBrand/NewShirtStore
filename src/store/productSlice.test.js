@@ -3,17 +3,20 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../api/productApi', () => ({
   getCatalogue: vi.fn(),
+  getProductById: vi.fn(),
   FASHION_CATEGORIES: [],
 }));
 
-import { getCatalogue } from '../api/productApi';
+import { getCatalogue, getProductById } from '../api/productApi';
 import productReducer, {
   fetchCatalogue,
+  fetchProductById,
   selectCatalogueError,
   selectCatalogueItems,
   selectCatalogueStatus,
   selectCategories,
   selectCategorySlugs,
+  selectProductDetail,
 } from './productSlice';
 
 const sampleProducts = [
@@ -137,5 +140,56 @@ describe('productSlice', () => {
       'mens-shirts',
       'womens-dresses',
     ]);
+  });
+
+  it('loads a product detail', async () => {
+    const detail = {
+      ...sampleProducts[0],
+      description: 'A well-made shirt.',
+      images: ['shirt.jpg', 'shirt-2.jpg'],
+      discountPercentage: 10,
+      sku: 'SKU-1',
+    };
+
+    getProductById.mockResolvedValueOnce(detail);
+    const store = createTestStore();
+
+    await store.dispatch(fetchProductById(1));
+
+    const { detail: detailState } = store.getState().products;
+
+    expect(getProductById).toHaveBeenCalledWith(1);
+    expect(detailState.status).toBe('succeeded');
+    expect(detailState.item).toEqual(detail);
+    expect(detailState.requestedId).toBe(1);
+    expect(selectProductDetail(store.getState()).item.sku).toBe('SKU-1');
+  });
+
+  it('reuses a cached product detail for the same id', async () => {
+    getProductById.mockResolvedValueOnce(sampleProducts[0]);
+    const store = createTestStore();
+
+    await store.dispatch(fetchProductById(1));
+    await store.dispatch(fetchProductById(1));
+
+    expect(getProductById).toHaveBeenCalledTimes(1);
+  });
+
+  it('stores a detail error and allows a retry', async () => {
+    getProductById
+      .mockRejectedValueOnce(new Error('Product API request failed (404 Not Found)'))
+      .mockResolvedValueOnce(sampleProducts[0]);
+
+    const store = createTestStore();
+
+    await store.dispatch(fetchProductById(1));
+
+    expect(selectProductDetail(store.getState()).status).toBe('failed');
+    expect(selectProductDetail(store.getState()).error).toContain('404');
+
+    await store.dispatch(fetchProductById(1));
+
+    expect(getProductById).toHaveBeenCalledTimes(2);
+    expect(selectProductDetail(store.getState()).status).toBe('succeeded');
   });
 });

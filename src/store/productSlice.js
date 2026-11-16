@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSelector, createSlice } from '@reduxjs/toolkit';
-import { getCatalogue } from '../api/productApi';
+import { getCatalogue, getProductById } from '../api/productApi';
 
 /**
  * Loads the curated clothing catalogue once and caches it in Redux.
@@ -30,10 +30,45 @@ export const fetchCatalogue = createAsyncThunk(
   },
 );
 
+/**
+ * Loads a single product for the detail page. The cached item is reused when
+ * the same product is opened again, while a different id clears the previous
+ * item so the page never flashes the wrong product.
+ */
+export const fetchProductById = createAsyncThunk(
+  'products/fetchProductById',
+  async (id, { rejectWithValue }) => {
+    try {
+      return await getProductById(id);
+    } catch (error) {
+      return rejectWithValue(
+        error instanceof Error ? error.message : 'Unable to load the product.',
+      );
+    }
+  },
+  {
+    condition: (id, { getState }) => {
+      const { detail } = getState().products;
+
+      if (detail.status === 'loading' && detail.requestedId === id) {
+        return false;
+      }
+
+      return !(detail.status === 'succeeded' && detail.item?.id === id);
+    },
+  },
+);
+
 const initialState = {
   items: [],
   status: 'idle', // idle | loading | succeeded | failed
   error: null,
+  detail: {
+    item: null,
+    status: 'idle', // idle | loading | succeeded | failed
+    error: null,
+    requestedId: null,
+  },
 };
 
 const productSlice = createSlice({
@@ -53,6 +88,20 @@ const productSlice = createSlice({
       .addCase(fetchCatalogue.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload ?? 'Unable to load the catalogue.';
+      })
+      .addCase(fetchProductById.pending, (state, action) => {
+        state.detail.status = 'loading';
+        state.detail.error = null;
+        state.detail.requestedId = action.meta.arg;
+        state.detail.item = null;
+      })
+      .addCase(fetchProductById.fulfilled, (state, action) => {
+        state.detail.status = 'succeeded';
+        state.detail.item = action.payload;
+      })
+      .addCase(fetchProductById.rejected, (state, action) => {
+        state.detail.status = 'failed';
+        state.detail.error = action.payload ?? 'Unable to load the product.';
       });
   },
 });
@@ -60,6 +109,7 @@ const productSlice = createSlice({
 export const selectCatalogueItems = (state) => state.products.items;
 export const selectCatalogueStatus = (state) => state.products.status;
 export const selectCatalogueError = (state) => state.products.error;
+export const selectProductDetail = (state) => state.products.detail;
 
 /**
  * Derived category data for the home page and catalogue filters. The first
