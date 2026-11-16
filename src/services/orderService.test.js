@@ -1,8 +1,4 @@
-import { describe, expect, it } from 'vitest';
-import {
-  OrderSubmissionUnavailableError,
-  submitOrderDraft,
-} from './orderService';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const draft = {
   status: 'draft',
@@ -11,14 +7,31 @@ const draft = {
   totals: { subtotal: 10, currency: 'USD' },
 };
 
+async function loadService() {
+  vi.resetModules();
+  return import('./orderService');
+}
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.restoreAllMocks();
+});
+
 describe('orderService', () => {
-  it('rejects with a backend-unavailable error until an order API exists', async () => {
+  it('rejects with a backend-unavailable error when orders are not enabled', async () => {
+    vi.stubEnv('VITE_ORDERS_ENABLED', 'false');
+    const { OrderSubmissionUnavailableError, submitOrderDraft } =
+      await loadService();
+
     await expect(submitOrderDraft(draft)).rejects.toBeInstanceOf(
       OrderSubmissionUnavailableError,
     );
   });
 
   it('requires a draft payload', async () => {
+    vi.stubEnv('VITE_ORDERS_ENABLED', 'false');
+    const { submitOrderDraft } = await loadService();
+
     await expect(submitOrderDraft(null)).rejects.toThrow(
       'A valid order draft is required.',
     );

@@ -101,17 +101,19 @@ src/
 - **Service boundaries:** product fetching goes through `src/services/productService.js`
   and `src/services/apiClient.js` (with `src/api/productApi.js` kept as a compatibility
   layer), so the DummyJSON source can be swapped for backend endpoints later.
-  Order submission is isolated behind `src/services/orderService.js`.
+  Order submission is isolated behind `src/services/orderService.js` and can be
+  enabled with `VITE_ORDERS_ENABLED=true` once a `POST /orders` endpoint exists.
 - **Domain models:** shared product/cart/checkout shapes live in `src/domain/*`
   (e.g. cart line items, totals, and order-draft creation/validation) to keep UI
   and state aligned on a stable contract.
 - **Checkout submission boundary:** the checkout flow validates customer details,
   builds an **order draft**, and attempts submission through the order service.
-  Because no backend is connected yet, submission is explicitly reported as
-  unavailable and no order/payment/cart mutation is faked.
-- **Cart persistence seam:** the cart currently uses a local-storage adapter as a
-  fallback (`src/store/cartStorage.js`); this can be replaced with a server-backed
-  cart/session source when auth and backend cart APIs are added.
+  Because no backend is connected/enabled yet, submission is explicitly reported
+  as unavailable and no order/payment/cart mutation is faked.
+- **Cart persistence seam:** `src/services/cartRepository.js` provides the cart
+  persistence boundary, currently backed by a local-storage adapter
+  (`src/store/cartStorage.js`) as a fallback. This can be replaced with a
+  server-backed cart/session source when auth and backend cart APIs are added.
 
 ## Testing notes
 

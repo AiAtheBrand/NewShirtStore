@@ -2,7 +2,8 @@ import { configureStore } from '@reduxjs/toolkit';
 import productReducer from './productSlice';
 import cartReducer, { selectCartItems } from './cartSlice';
 import newsletterReducer from './newsLetterSlice';
-import { loadCart, saveCart } from './cartStorage';
+import { cartRepository } from '../services/cartRepository';
+import { loadCart } from './cartStorage';
 
 export const store = configureStore({
   reducer: {
@@ -11,11 +12,14 @@ export const store = configureStore({
     newsletter: newsletterReducer,
   },
   preloadedState: {
+    // Synchronous preload keeps first paint stable; repository remains the
+    // persistence boundary for future async/server-backed cart hydration.
     cart: { items: loadCart() },
   },
 });
 
-// Write to storage only when the cart changed, not on every action.
+// Persist through the cart repository so the storage strategy can be swapped
+// (e.g. server-backed cart) without changing slice or UI code.
 let lastCartItems = selectCartItems(store.getState());
 
 store.subscribe(() => {
@@ -23,6 +27,6 @@ store.subscribe(() => {
 
   if (cartItems !== lastCartItems) {
     lastCartItems = cartItems;
-    saveCart(cartItems);
+    void cartRepository.save(cartItems);
   }
 });
