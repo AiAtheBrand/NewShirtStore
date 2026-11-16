@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.db import init_db
-from app.routers import cart, orders, products
+from app.routers import auth, cart, orders, products
 
 app = FastAPI(title="ShirtStore API", version="0.1.0")
 
@@ -30,6 +30,7 @@ def health():
     return {"status": "ok"}
 
 
+app.include_router(auth.router)
 app.include_router(products.router)
 app.include_router(orders.router)
 app.include_router(cart.router)

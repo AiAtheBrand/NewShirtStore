@@ -113,24 +113,21 @@ src/
   utils/        Currency formatting and catalogue helpers
 ```
 
-## Backend integration readiness
+## Backend integration
 
+- **FastAPI backend scaffold:** [`backend/`](backend/README.md) provides products, server-backed cart, JWT auth, and order APIs with SQLite persistence.
 - **Service boundaries:** product fetching goes through `src/services/productService.js`
-  and `src/services/apiClient.js` (with `src/api/productApi.js` kept as a compatibility
-  layer), so the DummyJSON source can be swapped for backend endpoints later.
-  Order submission is isolated behind `src/services/orderService.js` and can be
-  enabled with `VITE_ORDERS_ENABLED=true` once a `POST /orders` endpoint exists.
+  and `src/services/apiClient.js` (with `src/api/productApi.js` as a compatibility layer).
+  Order submission is isolated behind `src/services/orderService.js`.
+- **Config flags:** set `VITE_API_URL`, `VITE_ORDERS_ENABLED`, and `VITE_CART_API_ENABLED`
+  to connect the frontend to the backend (see `.env.example`).
 - **Domain models:** shared product/cart/checkout shapes live in `src/domain/*`
-  (e.g. cart line items, totals, and order-draft creation/validation) to keep UI
-  and state aligned on a stable contract.
-- **Checkout submission boundary:** the checkout flow validates customer details,
-  builds an **order draft**, and attempts submission through the order service.
-  Because no backend is connected/enabled yet, submission is explicitly reported
-  as unavailable and no order/payment/cart mutation is faked.
-- **Cart persistence seam:** `src/services/cartRepository.js` provides the cart
-  persistence boundary, currently backed by a local-storage adapter
-  (`src/store/cartStorage.js`) as a fallback. This can be replaced with a
-  server-backed cart/session source when auth and backend cart APIs are added.
+  to keep UI and state aligned on stable contracts.
+- **Checkout behavior:** validates details, builds an order draft, and submits via the
+  order service when enabled (backend confirms/validates stock); otherwise reports
+  submission as unavailable without faking payment/cart mutation.
+- **Cart persistence seam:** `src/services/cartRepository.js` syncs with `/cart` when
+  enabled (session/user-backed on backend) and falls back to local storage for resilience.
 
 ## Testing notes
 
@@ -142,16 +139,12 @@ jest-dom matchers and cleans up rendered components after each test.
 npm test
 ```
 
-## Demo limitations
+## Current limitations
 
-- **No authentication.** The account icon is intentionally absent until a
-  backend exists.
-- **No backend or payments.** Checkout validates the form, then clearly states
-  that no order was created and nothing was charged. No personal data is logged,
-  sent or stored.
-- **Sample reviews.** Testimonials are placeholder content for the demo.
-- **Newsletter is a demo.** The form keeps the email in Redux only and sends
-  nothing.
+- **Auth UI not yet built.** Backend JWT auth endpoints exist, but the frontend does not yet provide sign-in/register/account flows.
+- **No payments.** Orders can be submitted/confirmed by the backend when enabled, but payment processing is not implemented.
+- **Operational hardening pending.** Migrations, admin/role controls, rate limiting, production security/CORS, and richer order fulfillment workflows are still to be added.
+- **Sample reviews & demo newsletter.** Testimonials are placeholder content and newsletter stays local/demo-only.
 
 ## Roadmap
 

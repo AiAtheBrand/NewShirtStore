@@ -31,14 +31,26 @@ class Product(SQLModel, table=True):
 
 class Order(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    status: str = "submitted"
+    user_id: Optional[int] = Field(default=None, foreign_key="user.id", index=True)
+    status: str = "submitted"  # submitted | confirmed | cancelled | fulfilled
     draft: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
     message: str = "Order received."
+    idempotency_key: Optional[str] = Field(default=None, index=True)
+    created_at: str = Field(default_factory=utc_now)
+    updated_at: str = Field(default_factory=utc_now)
+
+
+class User(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    email: str = Field(index=True, unique=True)
+    full_name: str = ""
+    hashed_password: str
     created_at: str = Field(default_factory=utc_now)
 
 
 class Cart(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    session_key: str = Field(index=True, unique=True)
+    session_key: Optional[str] = Field(default=None, index=True, unique=True)
+    user_id: Optional[int] = Field(default=None, foreign_key="user.id", index=True)
     items: list[dict[str, Any]] = Field(default_factory=list, sa_column=Column(JSON))
     updated_at: str = Field(default_factory=utc_now)

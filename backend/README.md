@@ -1,11 +1,20 @@
 # ShirtStore Backend (FastAPI)
 
-Starter FastAPI backend for the ShirtStore frontend.
+FastAPI backend for the ShirtStore frontend with SQLite persistence.
 
 ## Features
-- Health check endpoint
-- Product catalogue/detail endpoints (curated fashion items, DummyJSON-compatible response shape for the current frontend)
-- Order draft submission endpoint (`POST /orders`) that accepts the frontend draft and returns a created order record (in-memory for now)
+- **Health:** `GET /health`
+- **Products:** curated catalogue with DummyJSON-compatible response shape
+  - `GET /products` (supports `limit`, `select`, `category`)
+  - `GET /products/{id}`
+  - `POST /products`, `PUT /products/{id}`, `DELETE /products/{id}` for catalogue management/alignment
+- **Cart (server-backed):** guest session carts via `X-Cart-Session` header, or user cart when authenticated
+  - `GET /cart`, `PUT /cart`, `DELETE /cart`
+- **Auth (JWT):**
+  - `POST /auth/register`, `POST /auth/login`, `GET /auth/me` (Bearer token)
+- **Orders:**
+  - `POST /orders` validates draft/items and product stock, decrements stock, supports `Idempotency-Key`, associates authenticated user when present
+  - `GET /orders`, `GET /orders/{id}`, `PATCH /orders/{id}/status`
 
 ## Setup
 
@@ -36,11 +45,11 @@ VITE_CART_API_ENABLED=true
 
 Then restart the Vite dev server.
 
-## Database
+## Database & config
 - Uses SQLite by default (`sqlite:///./shirtstore.db`) via SQLModel.
 - Tables are created on startup and curated products are seeded automatically when the product table is empty.
-- Override with `DATABASE_URL` environment variable if needed.
+- Environment variables: `DATABASE_URL`, `SECRET_KEY`, `ACCESS_TOKEN_EXPIRE_MINUTES`.
 
-## Notes
-- Product/order persistence is local SQLite in this step (no migrations/auth/payments/order lifecycle yet).
-- Expand the dataset, add migrations, auth, cart endpoints, and production config as next steps.
+## Notes / next hardening
+- This is a functional backend foundation (not a production-hardened deployment).
+- Consider adding migrations, role-based admin controls for product/order management, payment integration, richer order workflows, email/notifications, rate limiting, and production CORS/security settings.

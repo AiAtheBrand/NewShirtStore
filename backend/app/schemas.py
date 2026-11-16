@@ -38,3 +38,26 @@ class OrderCreated(BaseModel):
     status: str = "submitted"
     draft: dict[str, Any]
     message: str = "Order received."
+
+
+class UserCreate(BaseModel):
+    email: str
+    password: str = Field(min_length=6)
+    fullName: str = ""
+
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+
+class UserPublic(BaseModel):
+    id: int
+    email: str
+    fullName: str = ""
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserPublic
