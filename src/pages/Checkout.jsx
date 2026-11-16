@@ -9,6 +9,10 @@ import {
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { selectCartItems, selectCartSubtotal } from '../store/cartSlice';
 import { formatCurrency } from '../utils/formatCurrency';
+import {
+  OrderSubmissionUnavailableError,
+  submitOrderDraft,
+} from '../services/orderService';
 
 function FormField({
   id,
@@ -60,6 +64,10 @@ function Checkout() {
   const [formData, setFormData] = useState(EMPTY_CUSTOMER);
   const [errors, setErrors] = useState({});
   const [orderDraft, setOrderDraft] = useState(null);
+  const [submissionState, setSubmissionState] = useState({
+    status: 'idle', // idle | submitting | unavailable | error
+    message: null,
+  });
 
   const cartIsEmpty = cartItems.length === 0;
 
@@ -69,9 +77,10 @@ function Checkout() {
     setFormData((current) => ({ ...current, [name]: value }));
     setErrors((current) => ({ ...current, [name]: undefined }));
     setOrderDraft(null);
+    setSubmissionState({ status: 'idle', message: null });
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (cartIsEmpty) return;
@@ -81,18 +90,45 @@ function Checkout() {
 
     if (Object.keys(nextErrors).length > 0) {
       setOrderDraft(null);
+      setSubmissionState({ status: 'idle', message: null });
       return;
     }
 
-    // No backend/order API yet: build a validated draft for review, but do not
-    // submit it, persist it, clear the cart, or pretend an order was created.
-    setOrderDraft(
-      createOrderDraft({
-        customer: formData,
-        items: cartItems,
-        currency: 'USD',
-      }),
-    );
+    const draft = createOrderDraft({
+      customer: formData,
+      items: cartItems,
+      currency: 'USD',
+    });
+
+    setOrderDraft(draft);
+    setSubmissionState({ status: 'submitting', message: null });
+
+    try {
+      await submitOrderDraft(draft);
+      // When a backend is connected, replace this with real success handling
+      // (confirmation id, order status, cart clearing policy, etc.).
+      setSubmissionState({
+        status: 'error',
+        message:
+          'An unexpected submission result was returned. No order was created.',
+      });
+    } catch (error) {
+      if (error instanceof OrderSubmissionUnavailableError) {
+        setSubmissionState({
+          status: 'unavailable',
+          message: error.message,
+        });
+        return;
+      }
+
+      setSubmissionState({
+        status: 'error',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'The order draft could not be submitted.',
+      });
+    }
   };
 
   return (
@@ -116,14 +152,22 @@ function Checkout() {
           role="status"
           className="mt-8 rounded-2xl border border-amber-300 bg-amber-50 p-6"
         >
-          <h2 className="text-lg font-bold">Order draft ready for review</h2>
+          <h2 className="text-lg font-bold">
+            {submissionState.status === 'submitting'
+              ? 'Submitting order draft…'
+              : 'Order draft ready for review'}
+          </h2>
 
           <p className="mt-2 text-sm leading-6 text-amber-900">
             Thanks, {orderDraft.customer.fullName}. Your information and{' '}
             {orderDraft.items.length}{' '}
             {orderDraft.items.length === 1 ? 'item' : 'items'} are valid for a
-            draft order, but this demo has no backend or payment provider. No
-            order was created, nothing was charged, and your cart is unchanged.
+            draft order.
+            {submissionState.status === 'unavailable'
+              ? ` ${submissionState.message} No order was created, nothing was charged, and your cart is unchanged.`
+              : submissionState.status === 'error'
+                ? ` ${submissionState.message} Nothing was charged, and your cart is unchanged.`
+                : ' The draft was prepared for backend submission, but this demo has no connected order backend. No order was created, nothing was charged, and your cart is unchanged.'}
           </p>
 
           <dl className="mt-4 grid gap-3 text-sm text-amber-950 sm:grid-cols-2">
@@ -139,7 +183,15 @@ function Checkout() {
             </div>
             <div>
               <dt className="font-semibold">Draft status</dt>
-              <dd>Not submitted</dd>
+              <dd>
+                {submissionState.status === 'unavailable'
+                  ? 'Not submitted (backend unavailable)'
+                  : submissionState.status === 'error'
+                    ? 'Not submitted'
+                    : submissionState.status === 'submitting'
+                      ? 'Submitting…'
+                      : 'Not submitted'}
+              </dd>
             </div>
             <div>
               <dt className="font-semibold">Subtotal</dt>
@@ -152,7 +204,10 @@ function Checkout() {
 
           <button
             type="button"
-            onClick={() => setOrderDraft(null)}
+            onClick={() => {
+              setOrderDraft(null);
+              setSubmissionState({ status: 'idle', message: null });
+            }}
             className="mt-4 rounded-full bg-black px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800"
           >
             Edit details
@@ -292,10 +347,12 @@ function Checkout() {
             <button
               type="submit"
               form="checkout-form"
-              disabled={cartIsEmpty}
+              disabled={cartIsEmpty || submissionState.status === 'submitting'}
               className="mt-6 w-full rounded-full bg-black px-6 py-3 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600"
             >
-              Review demo order
+              {submissionState.status === 'submitting'
+                ? 'Submitting draft…'
+                : 'Review & submit draft'}
             </button>
           </div>
         </section>
