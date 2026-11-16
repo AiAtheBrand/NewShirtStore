@@ -54,6 +54,21 @@ cp .env.example .env   # optional: change VITE_API_URL
 npm run dev
 ```
 
+### Backend (FastAPI, scaffold)
+
+A starter backend lives in [`backend/`](backend/README.md).
+
+```bash
+cd backend
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
+```
+
+To use it from the frontend, set `VITE_API_URL=http://localhost:8000` and
+`VITE_ORDERS_ENABLED=true` in `.env`, then restart Vite.
+
 The app runs at `http://localhost:5173`.
 
 ### Environment

@@ -65,8 +65,9 @@ function Checkout() {
   const [errors, setErrors] = useState({});
   const [orderDraft, setOrderDraft] = useState(null);
   const [submissionState, setSubmissionState] = useState({
-    status: 'idle', // idle | submitting | unavailable | error
+    status: 'idle', // idle | submitting | unavailable | error | success
     message: null,
+    result: null,
   });
 
   const cartIsEmpty = cartItems.length === 0;
@@ -77,7 +78,7 @@ function Checkout() {
     setFormData((current) => ({ ...current, [name]: value }));
     setErrors((current) => ({ ...current, [name]: undefined }));
     setOrderDraft(null);
-    setSubmissionState({ status: 'idle', message: null });
+    setSubmissionState({ status: 'idle', message: null, result: null });
   };
 
   const handleSubmit = async (event) => {
@@ -90,7 +91,7 @@ function Checkout() {
 
     if (Object.keys(nextErrors).length > 0) {
       setOrderDraft(null);
-      setSubmissionState({ status: 'idle', message: null });
+      setSubmissionState({ status: 'idle', message: null, result: null });
       return;
     }
 
@@ -101,22 +102,21 @@ function Checkout() {
     });
 
     setOrderDraft(draft);
-    setSubmissionState({ status: 'submitting', message: null });
+    setSubmissionState({ status: 'submitting', message: null, result: null });
 
     try {
-      await submitOrderDraft(draft);
-      // When a backend is connected, replace this with real success handling
-      // (confirmation id, order status, cart clearing policy, etc.).
+      const result = await submitOrderDraft(draft);
       setSubmissionState({
-        status: 'error',
-        message:
-          'An unexpected submission result was returned. No order was created.',
+        status: 'success',
+        message: 'Your order was submitted successfully.',
+        result,
       });
     } catch (error) {
       if (error instanceof OrderSubmissionUnavailableError) {
         setSubmissionState({
           status: 'unavailable',
           message: error.message,
+          result: null,
         });
         return;
       }
@@ -127,6 +127,7 @@ function Checkout() {
           error instanceof Error
             ? error.message
             : 'The order draft could not be submitted.',
+        result: null,
       });
     }
   };
@@ -141,24 +142,36 @@ function Checkout() {
         <h1 className="mt-2 text-4xl font-black tracking-tight">CHECKOUT</h1>
 
         <p className="mt-3 max-w-2xl text-sm leading-6 text-gray-500">
-          Review your details and cart. This demo validates the form and prepares
-          an order draft, but no order is placed and no payment is taken. Nothing
-          you type is sent or stored.
+          Review your details and cart. The form is validated and an order draft is
+          submitted through the backend service when enabled; otherwise submission is
+          reported as unavailable. No payment is processed in this app.
         </p>
       </header>
 
       {orderDraft && (
         <div
           role="status"
-          className="mt-8 rounded-2xl border border-amber-300 bg-amber-50 p-6"
+          className={`mt-8 rounded-2xl border p-6 ${
+            submissionState.status === 'success'
+              ? 'border-green-300 bg-green-50'
+              : 'border-amber-300 bg-amber-50'
+          }`}
         >
           <h2 className="text-lg font-bold">
             {submissionState.status === 'submitting'
               ? 'Submitting order draft…'
-              : 'Order draft ready for review'}
+              : submissionState.status === 'success'
+                ? 'Order submitted'
+                : 'Order draft ready for review'}
           </h2>
 
-          <p className="mt-2 text-sm leading-6 text-amber-900">
+          <p
+            className={`mt-2 text-sm leading-6 ${
+              submissionState.status === 'success'
+                ? 'text-green-900'
+                : 'text-amber-900'
+            }`}
+          >
             Thanks, {orderDraft.customer.fullName}. Your information and{' '}
             {orderDraft.items.length}{' '}
             {orderDraft.items.length === 1 ? 'item' : 'items'} are valid for a
@@ -167,10 +180,18 @@ function Checkout() {
               ? ` ${submissionState.message} No order was created, nothing was charged, and your cart is unchanged.`
               : submissionState.status === 'error'
                 ? ` ${submissionState.message} Nothing was charged, and your cart is unchanged.`
-                : ' The draft was prepared for backend submission, but this demo has no connected order backend. No order was created, nothing was charged, and your cart is unchanged.'}
+                : submissionState.status === 'success'
+                  ? ` ${submissionState.message}${submissionState.result?.id ? ` Order ID: ${submissionState.result.id}.` : ''} Payment processing and cart-clearing policy depend on the connected backend.`
+                  : ' The draft was prepared for backend submission, but this demo has no connected order backend. No order was created, nothing was charged, and your cart is unchanged.'}
           </p>
 
-          <dl className="mt-4 grid gap-3 text-sm text-amber-950 sm:grid-cols-2">
+          <dl
+            className={`mt-4 grid gap-3 text-sm sm:grid-cols-2 ${
+              submissionState.status === 'success'
+                ? 'text-green-950'
+                : 'text-amber-950'
+            }`}
+          >
             <div>
               <dt className="font-semibold">Contact</dt>
               <dd>{orderDraft.customer.email}</dd>
@@ -190,7 +211,9 @@ function Checkout() {
                     ? 'Not submitted'
                     : submissionState.status === 'submitting'
                       ? 'Submitting…'
-                      : 'Not submitted'}
+                      : submissionState.status === 'success'
+                        ? `Submitted${submissionState.result?.id ? ` (#${submissionState.result.id})` : ''}`
+                        : 'Not submitted'}
               </dd>
             </div>
             <div>
@@ -206,7 +229,7 @@ function Checkout() {
             type="button"
             onClick={() => {
               setOrderDraft(null);
-              setSubmissionState({ status: 'idle', message: null });
+              setSubmissionState({ status: 'idle', message: null, result: null });
             }}
             className="mt-4 rounded-full bg-black px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-gray-800"
           >
