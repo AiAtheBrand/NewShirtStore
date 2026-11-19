@@ -45,6 +45,7 @@ class User(SQLModel, table=True):
     email: str = Field(index=True, unique=True)
     full_name: str = ""
     hashed_password: str
+    role: str = Field(default="customer", index=True)  # customer | admin
     created_at: str = Field(default_factory=utc_now)
 
 

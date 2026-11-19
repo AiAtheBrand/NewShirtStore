@@ -4,9 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
+from app.auth import require_admin
 from app.data import FASHION_CATEGORIES
 from app.db import get_session
-from app.models import Product
+from app.models import Product, User
 
 router = APIRouter(prefix="/products", tags=["products"])
 
@@ -67,7 +68,11 @@ def get_product(
 
 
 @router.post("", status_code=201)
-def create_product(payload: ProductUpsert, session: Session = Depends(get_session)):
+def create_product(
+    payload: ProductUpsert,
+    session: Session = Depends(get_session),
+    _admin: User = Depends(require_admin),
+):
     if payload.category not in FASHION_CATEGORIES:
         raise HTTPException(status_code=400, detail="Category is not in curated catalogue.")
     data = payload.model_dump(exclude_unset=True)
@@ -84,7 +89,10 @@ def create_product(payload: ProductUpsert, session: Session = Depends(get_sessio
 
 @router.put("/{product_id}")
 def update_product(
-    product_id: int, payload: ProductUpsert, session: Session = Depends(get_session)
+    product_id: int,
+    payload: ProductUpsert,
+    session: Session = Depends(get_session),
+    _admin: User = Depends(require_admin),
 ):
     product = session.get(Product, product_id)
     if not product:
@@ -105,7 +113,11 @@ def update_product(
 
 
 @router.delete("/{product_id}", status_code=204)
-def delete_product(product_id: int, session: Session = Depends(get_session)):
+def delete_product(
+    product_id: int,
+    session: Session = Depends(get_session),
+    _admin: User = Depends(require_admin),
+):
     product = session.get(Product, product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")

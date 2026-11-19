@@ -10,6 +10,12 @@ from sqlmodel import Session, select
 from app.db import get_session
 from app.models import User
 
+ADMIN_EMAILS = {
+    email.strip().lower()
+    for email in os.getenv("ADMIN_EMAILS", "").split(",")
+    if email.strip()
+}
+
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-me")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "10080"))
@@ -42,6 +48,12 @@ def authenticate_user(session: Session, email: str, password: str) -> User | Non
     return user
 
 
+def effective_role(user: User) -> str:
+    if user.email.lower() in ADMIN_EMAILS:
+        return "admin"
+    return getattr(user, "role", None) or "customer"
+
+
 def get_current_user_optional(
     authorization: Annotated[str | None, Header()] = None,
     session: Session = Depends(get_session),
@@ -55,6 +67,11 @@ def get_current_user_optional(
         if sub is None:
             return None
         user = session.get(User, int(sub))
+        if user and effective_role(user) == "admin" and user.role != "admin":
+            user.role = "admin"
+            session.add(user)
+            session.commit()
+            session.refresh(user)
         return user
     except Exception:
         return None
@@ -68,3 +85,9 @@ def get_current_user(user: Annotated[User | None, Depends(get_current_user_optio
             headers={"WWW-Authenticate": "Bearer"},
         )
     return user
+
+
+def require_admin(current_user: Annotated[User, Depends(get_current_user)]) -> User:
+    if effective_role(current_user) != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required.")
+    return current_user

@@ -42,7 +42,7 @@ class OrderCreated(BaseModel):
 
 class UserCreate(BaseModel):
     email: str
-    password: str = Field(min_length=6)
+    password: str = Field(min_length=8)
     fullName: str = ""
 
 
@@ -55,6 +55,7 @@ class UserPublic(BaseModel):
     id: int
     email: str
     fullName: str = ""
+    role: str = "customer"
 
 
 class Token(BaseModel):

@@ -1,6 +1,7 @@
 import os
 from collections.abc import Generator
 
+from sqlalchemy import text
 from sqlmodel import Session, SQLModel, create_engine, select
 
 from app.data import PRODUCTS
@@ -11,8 +12,24 @@ connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite")
 engine = create_engine(DATABASE_URL, echo=False, connect_args=connect_args)
 
 
+def _ensure_sqlite_schema() -> None:
+    if not DATABASE_URL.startswith("sqlite"):
+        return
+    with engine.begin() as conn:
+        # Best-effort additive migrations for local SQLite dev DBs.
+        try:
+            cols = [row[1] for row in conn.exec_driver_sql("PRAGMA table_info(user)").fetchall()]
+            if cols and "role" not in cols:
+                conn.exec_driver_sql(
+                    "ALTER TABLE user ADD COLUMN role VARCHAR NOT NULL DEFAULT 'customer'"
+                )
+        except Exception:
+            pass
+
+
 def init_db() -> None:
     SQLModel.metadata.create_all(engine)
+    _ensure_sqlite_schema()
     seed_products_if_empty()
 
 

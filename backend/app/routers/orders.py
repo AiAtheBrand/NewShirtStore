@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
-from app.auth import get_current_user_optional
+from app.auth import effective_role, get_current_user, get_current_user_optional, require_admin
 from app.db import get_session
 from app.models import Order, Product, User, utc_now
 from app.schemas import OrderDraft
@@ -81,12 +81,12 @@ def create_order(
 @router.get("")
 def list_orders(
     session: Session = Depends(get_session),
-    current_user: User | None = Depends(get_current_user_optional),
+    current_user: User = Depends(get_current_user),
 ):
     query = select(Order)
-    if current_user:
+    if effective_role(current_user) != "admin":
         query = query.where(Order.user_id == current_user.id)
-    orders = session.exec(query).all()
+    orders = session.exec(query.order_by(Order.id.desc())).all()
     return {"orders": [order.model_dump() for order in orders]}
 
 
@@ -94,12 +94,12 @@ def list_orders(
 def get_order(
     order_id: int,
     session: Session = Depends(get_session),
-    current_user: User | None = Depends(get_current_user_optional),
+    current_user: User = Depends(get_current_user),
 ):
     order = session.get(Order, order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Order not found.")
-    if current_user and order.user_id not in (None, current_user.id):
+    if effective_role(current_user) != "admin" and order.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not allowed to access this order.")
     return order.model_dump()
 
@@ -109,15 +109,13 @@ def update_order_status(
     order_id: int,
     payload: OrderStatusUpdate,
     session: Session = Depends(get_session),
-    current_user: User | None = Depends(get_current_user_optional),
+    _admin: User = Depends(require_admin),
 ):
     if payload.status not in ALLOWED_STATUSES:
         raise HTTPException(status_code=400, detail="Invalid order status.")
     order = session.get(Order, order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Order not found.")
-    if current_user and order.user_id not in (None, current_user.id):
-        raise HTTPException(status_code=403, detail="Not allowed to modify this order.")
 
     order.status = payload.status
     order.updated_at = utc_now()

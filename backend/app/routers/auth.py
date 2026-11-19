@@ -4,6 +4,7 @@ from sqlmodel import Session
 from app.auth import (
     authenticate_user,
     create_access_token,
+    effective_role,
     get_current_user,
     get_user_by_email,
     hash_password,
@@ -20,6 +21,8 @@ def register(payload: UserCreate, session: Session = Depends(get_session)):
     email = payload.email.strip().lower()
     if not email or "@" not in email:
         raise HTTPException(status_code=400, detail="A valid email is required.")
+    if len(payload.password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters.")
     if get_user_by_email(session, email):
         raise HTTPException(status_code=400, detail="Email is already registered.")
 
@@ -28,6 +31,8 @@ def register(payload: UserCreate, session: Session = Depends(get_session)):
         full_name=payload.fullName.strip(),
         hashed_password=hash_password(payload.password),
     )
+    if effective_role(user) == "admin":
+        user.role = "admin"
     session.add(user)
     session.commit()
     session.refresh(user)
@@ -35,7 +40,9 @@ def register(payload: UserCreate, session: Session = Depends(get_session)):
     token = create_access_token(user.id)
     return Token(
         access_token=token,
-        user=UserPublic(id=user.id, email=user.email, fullName=user.full_name),
+        user=UserPublic(
+            id=user.id, email=user.email, fullName=user.full_name, role=effective_role(user)
+        ),
     )
 
 
@@ -50,7 +57,9 @@ def login(payload: UserLogin, session: Session = Depends(get_session)):
     token = create_access_token(user.id)
     return Token(
         access_token=token,
-        user=UserPublic(id=user.id, email=user.email, fullName=user.full_name),
+        user=UserPublic(
+            id=user.id, email=user.email, fullName=user.full_name, role=effective_role(user)
+        ),
     )
 
 
@@ -60,4 +69,5 @@ def me(current_user: User = Depends(get_current_user)):
         id=current_user.id,
         email=current_user.email,
         fullName=current_user.full_name,
+        role=effective_role(current_user),
     )
